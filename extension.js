@@ -61,7 +61,8 @@ const MailnagExtension = new Lang.Class({
         this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved',
         	Lang.bind(this, this._onMailsRemoved));
         
-       	// TODO : what if Mailnag sends a MailsAdded signal here (should happen *extemely* rarely)?
+       	// TODO : what if Mailnag sends a MailsAdded signal here or at the end of this function
+       	// (should happen *extemely* rarely)?
        	// Is it possible to prevent the extension from notifying twice?
        	
         // Mailnag possibly fired a 'MailsAdded' signal before this extension was started,
