@@ -22,12 +22,18 @@ const Main = imports.ui.main;
 const St = imports.gi.St;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
+const PanelMenu = imports.ui.panelMenu;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 
 const SOURCE_ICON = 'mail-unread';
 const MAX_VISIBLE_MAILS = 10;
 
+// TODO : move to extension settings
+// CAUTION: these variable are accessed in enable() as well!
+const SHOW_NOTIFICATIONS = true;
+const SHOW_INDICATOR = true;
+		
 const MailnagIface = <interface name="mailnag.MailnagService">
 <method name="GetMails">
     <arg type="aa{sv}" direction="out" />
@@ -48,9 +54,13 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init : function() {
-		this._enableNotifications = true;
+	_init : function(enableNotifications, enableIndicator) {
+		
+		this._mails = new Array();
+		this._enableNotifications = enableNotifications;
+		this._enableIndicator = enableIndicator;
 		this._source = null;
+		this._indicator = null;
 		
 		this._proxy = new MailnagDbus(Gio.DBus.session,
 			'mailnag.MailnagService', '/mailnag/MailnagService');
@@ -61,7 +71,7 @@ const MailnagExtension = new Lang.Class({
         this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved',
         	Lang.bind(this, this._onMailsRemoved));
         
-       	// TODO : what if Mailnag sends a MailsAdded signal here or at the end of this function
+       	// TODO : what if Mailnag sends a MailsAdded signal here or after _getMailsAsync()
        	// (should happen *extemely* rarely)?
        	// Is it possible to prevent the extension from notifying twice?
        	
@@ -77,6 +87,8 @@ const MailnagExtension = new Lang.Class({
 		this._proxy.GetMailsRemote(Lang.bind(this,
 			function(result, error) {
 				if (!error) {
+					this._mails = result[0];
+					
 					if (this._enableNotifications) {
 						if (this._source == null) {
 							this._source = new MailnagSource();
@@ -88,7 +100,15 @@ const MailnagExtension = new Lang.Class({
 							
 							Main.messageTray.add(this._source);
 						}
-						this._source.notifySummary(result[0]);
+						this._source.notifySummary(this._mails);
+					}
+					
+					if (this._enableIndicator)	{
+						if (this._indicator == null) {
+							this._createIndicator();
+						} else {
+							this._indicator.setMails(this._mails);
+						}
 					}
 				}
 			}));
@@ -99,7 +119,46 @@ const MailnagExtension = new Lang.Class({
 	},
 	
 	_onMailsRemoved: function(proxy, sender, newCount) {
-		// TODO
+		// TODO : not only support removal of *all* mails
+		if (newCount == 0) {
+			this._mails = new Array();
+		
+			// TODO : update messagtray source
+			
+			if (this._indicator != null) {
+				if (this._mails.length == 0) {
+					this._destroyIndicator();
+				} else {
+					this._indicator.setMails(this._mails);
+				}
+			}
+		}
+	},
+	
+	_createIndicator: function() {
+		this._indicator = new Indicator();
+		this._indicator.setMails(this._mails);
+		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
+	},
+	
+	_destroyIndicator: function() {
+		if (this._indicator != null) {
+			this._indicator.destroy();
+			this._indicator = null;
+		}
+	},
+	
+	enableIndicator: function() {
+		if ((this._indicator == null) && (this._mails.length > 0)) {
+			this._createIndicator();
+		}
+		
+		this._enableIndicator = true;
+	},
+	
+	disableIndicator: function() {
+		this._destroyIndicator();
+		this._enableIndicator = false;
 	},
 	
 	dispose: function() {
@@ -116,7 +175,23 @@ const MailnagExtension = new Lang.Class({
 			this._source = null;
 		}
 		
-		// TODO : dispose topbar icon
+		this._destroyIndicator();
+	}
+});
+
+const Indicator = new Lang.Class({
+	Name: 'MailnagIndicator',
+	Extends: PanelMenu.Button,
+	
+	_init: function() {
+		this.parent(0.0, this.Name);
+		this._countLabel = new St.Label({style_class: 'mailcount-label'});
+		this._countLabel.set_text("0");
+		this.actor.add_actor(this._countLabel);
+	},
+	
+	setMails: function(mails) {
+		this._countLabel.set_text(mails.length.toString());
 	}
 });
 
@@ -155,7 +230,7 @@ const MailnagSource = new Lang.Class({
 		this._count = mails.length;
 		
 		for (let i = 0; i < maxMails; i++) {
-			sender = mails[i]['sender_name'].get_string()[0];
+			let sender = mails[i]['sender_name'].get_string()[0];
 			if (sender.length == 0) sender = mails[i]['sender_addr'].get_string()[0];
 			body += sender + ":\n<i>" + mails[i]['subject'].get_string()[0] + "</i>\n\n";
 		}
@@ -192,12 +267,15 @@ function init() {
 }
 
 function enable() {
-	if (enabled)
+	if (enabled) {
+		// Re-enable the indicator when the exteion is re-enabled on screen unlock.
+		if ((ext != null) && SHOW_INDICATOR) ext.enableIndicator();
 		return;
+	}
 	
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
 		function(owner) {
-			ext = new MailnagExtension();
+			ext = new MailnagExtension(SHOW_NOTIFICATIONS, SHOW_INDICATOR);
 		},
 		function (owner) {
 			if (ext != null) {
@@ -211,9 +289,11 @@ function enable() {
 
 function disable() {
 	let isLockScreenMode = !Main.sessionMode.allowExtensions;
-	// Don't allow the extension to be disabled on lockscreen activation
-	if (!isLockScreenMode)
-	{
+	// Don't allow the extension to be disabled on lockscreen activation.
+	// Just remove the indicator from the top panel.
+	if (isLockScreenMode) {
+		if (ext != null) ext.disableIndicator();
+	} else {
 		if (watch_id > -1) {
 			// TODO : test: does this call the function (owner) callback, so ext.dispose() is called twice?
 			Gio.DBus.session.unwatch_name(watch_id);
