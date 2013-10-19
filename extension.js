@@ -20,6 +20,7 @@
 
 const Main = imports.ui.main;
 const St = imports.gi.St;
+const Clutter = imports.gi.Clutter;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
@@ -185,13 +186,73 @@ const Indicator = new Lang.Class({
 	
 	_init: function() {
 		this.parent(0.0, this.Name);
-		this._countLabel = new St.Label({style_class: 'mailcount-label'});
-		this._countLabel.set_text("0");
-		this.actor.add_actor(this._countLabel);
+		
+		let icon = new St.Icon({
+			icon_name: 'mail-unread-symbolic',
+			style_class: 'system-status-icon'});
+
+		this._iconBin = new St.Bin({ child: icon,
+									 /*width: icon.width, height: icon.height,*/
+									 x_fill: true,
+									 y_fill: true });
+
+		this._counterLabel = new St.Label({ text: "0",
+											x_align: Clutter.ActorAlign.CENTER,
+											x_expand: true,
+											y_align: Clutter.ActorAlign.CENTER,
+											y_expand: true });
+		
+		this._counterBin = new St.Bin({ style_class: 'mailnag-counter',
+										child: this._counterLabel,
+										layout_manager: new Clutter.BinLayout() });
+
+		this._counterBin.connect('style-changed', Lang.bind(this, function() {
+			let themeNode = this._counterBin.get_theme_node();
+			this._counterBin.translation_x = themeNode.get_length('-mailnag-counter-overlap-x');
+			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
+		}));
+            
+        this.actor.add_actor(this._iconBin);                      
+		this.actor.add_actor(this._counterBin);
 	},
 	
+	_allocate: function(actor, box, flags) {
+		// the iconBin should fill our entire box
+		this._iconBin.allocate(box, flags);
+
+		let childBox = new Clutter.ActorBox();
+
+		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
+		let direction = this.actor.get_text_direction();
+
+		if (direction == Clutter.TextDirection.LTR) {
+			// allocate on the right in LTR
+			childBox.x1 = box.x2 - naturalWidth;
+			childBox.x2 = box.x2;
+		} else {
+			// allocate on the left in RTL
+			childBox.x1 = 0;
+			childBox.x2 = naturalWidth;
+		}
+
+		childBox.y1 = box.y2 - naturalHeight;
+		childBox.y2 = box.y2;
+
+		this._counterBin.allocate(childBox, flags);
+    },
+    
+    _getPreferredWidth: function (actor, forHeight, alloc) {
+        let [min, nat] = this._iconBin.get_preferred_width(forHeight);
+        alloc.min_size = min; alloc.nat_size = nat;
+    },
+
+    _getPreferredHeight: function (actor, forWidth, alloc) {
+        let [min, nat] = this._iconBin.get_preferred_height(forWidth);
+        alloc.min_size = min; alloc.nat_size = nat;
+    },
+	
 	setMails: function(mails) {
-		this._countLabel.set_text(mails.length.toString());
+		this._counterLabel.set_text(mails.length.toString());
 	}
 });
 

@@ -16,9 +16,12 @@
 * MA 02110-1301, USA.
 */
 
-.mailcount-label {
-    text-align: center;
-    padding: 0 4px;
-    border-radius: 4px;
-    background-color: #CC3C29;    
+.mailnag-counter {
+    background-color: rgba(70, 144, 217, 0.7);
+    color: #ffffff;
+    border-radius: 24px;
+    font-size: 6pt;
+    padding:2px;
+    -mailnag-counter-overlap-x: 2px;
+    /*-mailnag-counter-overlap-y: 0px;*/
 }
