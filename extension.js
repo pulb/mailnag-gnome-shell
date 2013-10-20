@@ -55,7 +55,7 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init : function(enableNotifications, enableIndicator) {
+	_init: function(enableNotifications, enableIndicator) {
 		
 		this._mails = new Array();
 		this._enableNotifications = enableNotifications;
