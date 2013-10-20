@@ -125,6 +125,7 @@ const MailnagExtension = new Lang.Class({
 			this._mails = new Array();
 		
 			// TODO : update messagtray source
+			// (source probably needs to call this.countUpdated() manually)
 			
 			if (this._indicator != null) {
 				if (this._mails.length == 0) {
