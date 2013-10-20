@@ -314,6 +314,9 @@ const MailnagSource = new Lang.Class({
 		} else {
 			n = this.notifications[0];
 			n.update(summary, body, params);
+			// this.notify() updates the counter badge for *new* notifications only
+			// so update the counter manually in case of an updated notification.
+			this.countUpdated();
 		}
 		
 		this.notify(n);
