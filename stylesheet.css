@@ -22,6 +22,20 @@
     border-radius: 24px;
     font-size: 6pt;
     padding:2px;
+    min-width:10px;
     -mailnag-counter-overlap-x: 2px;
     /*-mailnag-counter-overlap-y: 0px;*/
+}
+
+.menu-item-sender {
+	font-size: medium;
+	font-weight: bold;
+}
+
+.menu-item-subject {
+	font-size: small;
+}
+
+.menu-item-more {
+	font-style: italic;
 }
