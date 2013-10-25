@@ -181,6 +181,27 @@ const MailnagExtension = new Lang.Class({
 	}
 });
 
+const IndicatorMailMenuItem = new Lang.Class({
+	Name: 'IndicatorMailMenuItem',
+	Extends: PopupMenu.PopupBaseMenuItem,
+
+	_init: function(sender, subject) {
+		this.parent();
+		
+		let vbox = new St.BoxLayout({ vertical: true });
+		let senderLabel = new St.Label({ text: sender, 
+										 style_class: 'menu-item-sender' });
+
+		let subjectLabel = new St.Label({ text: subject, 
+										  style_class: 'menu-item-subject' });
+		
+		vbox.add(senderLabel);
+		vbox.add(subjectLabel);
+	
+		this.actor.add_child(vbox);
+	}
+});
+
 const Indicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
@@ -252,8 +273,33 @@ const Indicator = new Lang.Class({
         alloc.min_size = min; alloc.nat_size = nat;
     },
 	
+	_updateMenu: function(mails) {
+		this.menu.removeAll();
+		
+		let maxMails = (mails.length <= MAX_VISIBLE_MAILS) ? 
+							mails.length : MAX_VISIBLE_MAILS;
+		
+		for (let i = 0; i < maxMails; i++) {
+			let sender = mails[i]['sender_name'].get_string()[0];
+			if (sender.length == 0) sender = mails[i]['sender_addr'].get_string()[0];
+			let subject = mails[i]['subject'].get_string()[0];
+			let item = new IndicatorMailMenuItem(sender, subject);
+			
+			this.menu.addMenuItem(item);
+		}
+		
+		if (mails.length > MAX_VISIBLE_MAILS) {
+			let str = _("(and {0} more)").replace("{0}", (mails.length - MAX_VISIBLE_MAILS));
+			let item = new PopupMenu.PopupBaseMenuItem();
+			item.actor.add_child(new St.Label({ text: str, style_class: 'menu-item-more' }));
+			
+			this.menu.addMenuItem(item);
+		}
+	},
+	
 	setMails: function(mails) {
 		this._counterLabel.set_text(mails.length.toString());
+		this._updateMenu(mails);
 	}
 });
 
