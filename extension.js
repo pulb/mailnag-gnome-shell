@@ -188,17 +188,26 @@ const IndicatorMailMenuItem = new Lang.Class({
 	_init: function(sender, subject) {
 		this.parent();
 		
-		let vbox = new St.BoxLayout({ vertical: true });
-		let senderLabel = new St.Label({ text: sender, 
-										 style_class: 'menu-item-sender' });
-
-		let subjectLabel = new St.Label({ text: subject, 
-										  style_class: 'menu-item-subject' });
+		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
+		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
+		
+		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
+		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
 		
 		vbox.add(senderLabel);
 		vbox.add(subjectLabel);
-	
-		this.actor.add_child(vbox);
+		
+		hbox.add(vbox);
+		
+		let closeButton = new St.Button({ reactive: true, can_focus: true, 
+										  track_hover: true, style_class: 'mark-as-read-button' });
+		
+		closeButton.child = new St.Icon({ icon_name: 'edit-delete-symbolic', 
+								style_class: 'popup-menu-icon' });
+		
+		//hbox.add(closeButton);
+
+		this.actor.add_child(hbox);
 	}
 });
 
@@ -291,7 +300,8 @@ const Indicator = new Lang.Class({
 		if (mails.length > MAX_VISIBLE_MAILS) {
 			let str = _("(and {0} more)").replace("{0}", (mails.length - MAX_VISIBLE_MAILS));
 			let item = new PopupMenu.PopupBaseMenuItem();
-			item.actor.add_child(new St.Label({ text: str, style_class: 'menu-item-more' }));
+			item.actor.style_class = 'menu-item-more-box';
+			item.actor.add_child(new St.Label({ text: str }));
 			
 			this.menu.addMenuItem(item);
 		}

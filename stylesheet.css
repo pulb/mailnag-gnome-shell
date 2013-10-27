@@ -27,15 +27,42 @@
     /*-mailnag-counter-overlap-y: 0px;*/
 }
 
-.menu-item-sender {
+.menu-item-box {
+	spacing: 16px;
+}
+
+.sender-label {
 	font-size: medium;
 	font-weight: bold;
 }
 
-.menu-item-subject {
+.subject-label {
 	font-size: small;
 }
 
-.menu-item-more {
+.menu-item-more-box {
+	font-size: small;
 	font-style: italic;
+	spacing: 12px;
+}
+
+.menu-item-more-box:ltr {
+    padding: .4em 1.75em .4em 0em;
+}
+
+.menu-item-more-box:rtl {
+    padding: .4em 0em .4em 1.75em;
+}
+
+.mark-as-read-button {
+	color: #e6e6e6;
+}
+
+.mark-as-read-button:hover,
+.mark-as-read-button:focus {
+	color: white;
+}
+
+.mark-as-read-button:active {
+	color: black;
 }
