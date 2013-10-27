@@ -20,14 +20,14 @@
 
 const Main = imports.ui.main;
 const St = imports.gi.St;
-const Clutter = imports.gi.Clutter;
-const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
-const PanelMenu = imports.ui.panelMenu;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Indicator = Me.imports.indicator;
+const Source = Me.imports.source;
 
-const SOURCE_ICON = 'mail-unread';
 const MAX_VISIBLE_MAILS = 10;
 
 // TODO : move to extension settings
@@ -92,7 +92,7 @@ const MailnagExtension = new Lang.Class({
 					
 					if (this._enableNotifications) {
 						if (this._source == null) {
-							this._source = new MailnagSource();
+							this._source = new Source.MailnagSource(MAX_VISIBLE_MAILS);
 							// Make sure we get informed if the user 
 							// closes our notification source.
 							this._source.connect('destroy', Lang.bind(this, function() {
@@ -138,7 +138,7 @@ const MailnagExtension = new Lang.Class({
 	},
 	
 	_createIndicator: function() {
-		this._indicator = new Indicator();
+		this._indicator = new Indicator.MailnagIndicator(MAX_VISIBLE_MAILS);
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
 	},
@@ -178,205 +178,6 @@ const MailnagExtension = new Lang.Class({
 		}
 		
 		this._destroyIndicator();
-	}
-});
-
-const IndicatorMailMenuItem = new Lang.Class({
-	Name: 'IndicatorMailMenuItem',
-	Extends: PopupMenu.PopupBaseMenuItem,
-
-	_init: function(sender, subject) {
-		this.parent();
-		
-		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
-		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
-		
-		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
-		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
-		
-		vbox.add(senderLabel);
-		vbox.add(subjectLabel);
-		
-		hbox.add(vbox);
-		
-		let closeButton = new St.Button({ reactive: true, can_focus: true, 
-										  track_hover: true, style_class: 'mark-as-read-button' });
-		
-		closeButton.child = new St.Icon({ icon_name: 'edit-delete-symbolic', 
-								style_class: 'popup-menu-icon' });
-		
-		//hbox.add(closeButton);
-
-		this.actor.add_child(hbox);
-	}
-});
-
-const Indicator = new Lang.Class({
-	Name: 'MailnagIndicator',
-	Extends: PanelMenu.Button,
-	
-	_init: function() {
-		this.parent(0.0, this.Name);
-		
-		let icon = new St.Icon({
-			icon_name: 'mail-unread-symbolic',
-			style_class: 'system-status-icon'});
-
-		this._iconBin = new St.Bin({ child: icon,
-									 /*width: icon.width, height: icon.height,*/
-									 x_fill: true,
-									 y_fill: true });
-
-		this._counterLabel = new St.Label({ text: "0",
-											x_align: Clutter.ActorAlign.CENTER,
-											x_expand: true,
-											y_align: Clutter.ActorAlign.CENTER,
-											y_expand: true });
-		
-		this._counterBin = new St.Bin({ style_class: 'mailnag-counter',
-										child: this._counterLabel,
-										layout_manager: new Clutter.BinLayout() });
-
-		this._counterBin.connect('style-changed', Lang.bind(this, function() {
-			let themeNode = this._counterBin.get_theme_node();
-			this._counterBin.translation_x = themeNode.get_length('-mailnag-counter-overlap-x');
-			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
-		}));
-            
-        this.actor.add_actor(this._iconBin);                      
-		this.actor.add_actor(this._counterBin);
-	},
-	
-	_allocate: function(actor, box, flags) {
-		// the iconBin should fill our entire box
-		this._iconBin.allocate(box, flags);
-
-		let childBox = new Clutter.ActorBox();
-
-		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
-		let direction = this.actor.get_text_direction();
-
-		if (direction == Clutter.TextDirection.LTR) {
-			// allocate on the right in LTR
-			childBox.x1 = box.x2 - naturalWidth;
-			childBox.x2 = box.x2;
-		} else {
-			// allocate on the left in RTL
-			childBox.x1 = 0;
-			childBox.x2 = naturalWidth;
-		}
-
-		childBox.y1 = box.y2 - naturalHeight;
-		childBox.y2 = box.y2;
-
-		this._counterBin.allocate(childBox, flags);
-    },
-    
-    _getPreferredWidth: function (actor, forHeight, alloc) {
-        let [min, nat] = this._iconBin.get_preferred_width(forHeight);
-        alloc.min_size = min; alloc.nat_size = nat;
-    },
-
-    _getPreferredHeight: function (actor, forWidth, alloc) {
-        let [min, nat] = this._iconBin.get_preferred_height(forWidth);
-        alloc.min_size = min; alloc.nat_size = nat;
-    },
-	
-	_updateMenu: function(mails) {
-		this.menu.removeAll();
-		
-		let maxMails = (mails.length <= MAX_VISIBLE_MAILS) ? 
-							mails.length : MAX_VISIBLE_MAILS;
-		
-		for (let i = 0; i < maxMails; i++) {
-			let sender = mails[i]['sender_name'].get_string()[0];
-			if (sender.length == 0) sender = mails[i]['sender_addr'].get_string()[0];
-			let subject = mails[i]['subject'].get_string()[0];
-			let item = new IndicatorMailMenuItem(sender, subject);
-			
-			this.menu.addMenuItem(item);
-		}
-		
-		if (mails.length > MAX_VISIBLE_MAILS) {
-			let str = _("(and {0} more)").replace("{0}", (mails.length - MAX_VISIBLE_MAILS));
-			let item = new PopupMenu.PopupBaseMenuItem();
-			item.actor.style_class = 'menu-item-more-box';
-			item.actor.add_child(new St.Label({ text: str }));
-			
-			this.menu.addMenuItem(item);
-		}
-	},
-	
-	setMails: function(mails) {
-		this._counterLabel.set_text(mails.length.toString());
-		this._updateMenu(mails);
-	}
-});
-
-const MailnagSource = new Lang.Class({
-	Name: 'MailnagSource',
-	Extends: MessageTray.Source,
-
-	_init: function() {
-		this._count = 0;
-		this.parent("Mailnag", SOURCE_ICON);
-	},
-
-	get count() {
-        return this._count;
-    },
-
-    get indicatorCount() {
-        return this._count;
-    },
-
-    get unseenCount() {
-        // TODO : Return count of mails newly reported by mailnag?
-        if ((this.notifications.length > 0) && (!this.notifications[0].acknowledged)) {
-        	return this._count;
-        } else {
-        	return 0;
-        }
-    },
-
-	notifySummary: function(mails) {
-		let summary = "";
-		let body = "";
-		let maxMails = (mails.length <= MAX_VISIBLE_MAILS) ? 
-							mails.length : MAX_VISIBLE_MAILS;
-							
-		this._count = mails.length;
-		
-		for (let i = 0; i < maxMails; i++) {
-			let sender = mails[i]['sender_name'].get_string()[0];
-			if (sender.length == 0) sender = mails[i]['sender_addr'].get_string()[0];
-			body += sender + ":\n<i>" + mails[i]['subject'].get_string()[0] + "</i>\n\n";
-		}
-		
-		if (mails.length > MAX_VISIBLE_MAILS) {
-			body += "<i>" + _("(and {0} more)").replace("{0}", (mails.length - MAX_VISIBLE_MAILS)) + "</i>";
-		}
-		
-		if (mails.length > 1) {
-			summary = _("You have {0} new mails.").replace("{0}", mails.length);
-		} else {
-			summary = _("You have a new mail.");
-		}
-		
-		let params = { bannerMarkup : true };
-		let n = null;
-		if (this.notifications.length == 0) {
-			n = new Main.MessageTray.Notification(this, 
-					summary, body, params);
-		} else {
-			n = this.notifications[0];
-			n.update(summary, body, params);
-			// this.notify() updates the counter badge for *new* notifications only
-			// so update the counter manually in case of an updated notification.
-			this.countUpdated();
-		}
-		
-		this.notify(n);
 	}
 });
 
