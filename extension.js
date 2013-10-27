@@ -27,13 +27,17 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Indicator = Me.imports.indicator;
 const Source = Me.imports.source;
+const RemoteSearch = imports.ui.remoteSearch;
+const Search = imports.ui.search;
 
 const MAX_VISIBLE_MAILS = 10;
+const AVATAR_ICON_SIZE = 42;
 
 // TODO : move to extension settings
 // CAUTION: these variable are accessed in enable() as well!
 const SHOW_NOTIFICATIONS = true;
 const SHOW_INDICATOR = true;
+const SHOW_AVATARS = true;
 		
 const MailnagIface = <interface name="mailnag.MailnagService">
 <method name="GetMails">
@@ -55,9 +59,10 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(enableNotifications, enableIndicator) {
+	_init: function(enableNotifications, enableIndicator, avatarIconFactory) {
 		
-		this._mails = new Array();
+		this._mails = [];
+		this._avatarIconFactory = avatarIconFactory;
 		this._enableNotifications = enableNotifications;
 		this._enableIndicator = enableIndicator;
 		this._source = null;
@@ -122,7 +127,7 @@ const MailnagExtension = new Lang.Class({
 	_onMailsRemoved: function(proxy, sender, newCount) {
 		// TODO : not only support removal of *all* mails
 		if (newCount == 0) {
-			this._mails = new Array();
+			this._mails = [];
 		
 			// TODO : update messagtray source
 			// (source probably needs to call this.countUpdated() manually)
@@ -138,7 +143,9 @@ const MailnagExtension = new Lang.Class({
 	},
 	
 	_createIndicator: function() {
-		this._indicator = new Indicator.MailnagIndicator(MAX_VISIBLE_MAILS);
+		this._indicator = new Indicator.MailnagIndicator(
+				MAX_VISIBLE_MAILS, this._avatarIconFactory);
+		
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
 	},
@@ -181,6 +188,77 @@ const MailnagExtension = new Lang.Class({
 	}
 });
 
+const AvatarIconFactory = new Lang.Class({
+	Name: 'AvatarIconFactory',
+	
+	_init: function() {
+		this._initialized = false;
+		this._completedCallback = null;
+		this._iconSize = 0;
+		this._nameMetaMapping = {};
+		this._searchSystem = new Search.SearchSystem();
+		this._searchSystem.connect('search-updated', 
+			Lang.bind(this, this._search_updated));
+		
+		RemoteSearch.loadRemoteSearchProviders(Lang.bind(this,
+			function(provider) {
+				if (provider.id == "gnome-contacts.desktop") {
+					this._searchSystem.registerProvider(provider);
+				}
+			}));
+	},
+	
+	init: function(iconSize, completedCallback) {
+		if (this._initialized)
+			return;
+		
+		this._iconSize = iconSize;
+		this._completedCallback = completedCallback;
+		
+		// load all contacts that have an email address
+		this._searchSystem.updateSearchResults(["@"]);
+			
+		this._initialized = true;
+	},
+	
+	createIconForName: function(name) {
+		let icon = null;
+		let meta = this._nameMetaMapping[name.toLowerCase()];
+		
+		if (meta != undefined) {
+			icon = meta['createIcon'](this._iconSize);
+		}
+		
+		return icon;
+	},
+	
+	getIconSize: function() {
+		return this._iconSize;
+	},
+	
+	_search_updated: function(searchSystem, results) {
+		let [provider, providerResults] = results;
+		if (providerResults.length == 0) {
+			if (this._completedCallback != null)
+				this._completedCallback(this);
+		} else {				
+			provider.getResultMetas(providerResults, Lang.bind(this,
+				function (metas) {
+					for (let i = 0; i < metas.length; i++) {
+						// Unfortunately the email address isn't available 
+						// in the search result so we have to use the contact 
+						// name (which isn't really unique...) for lookup instead.
+						let name = metas[i]['name'].toLowerCase();
+						this._nameMetaMapping[name] = metas[i];
+					}
+					
+					if (this._completedCallback != null)
+						this._completedCallback(this);
+				}));
+		}
+	}
+});
+
 let ext = null;
 let watch_id = -1;
 let enabled = false;
@@ -196,8 +274,20 @@ function enable() {
 	}
 	
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
-		function(owner) {
-			ext = new MailnagExtension(SHOW_NOTIFICATIONS, SHOW_INDICATOR);
+		function (owner) {
+			if (SHOW_AVATARS) {
+				let iconfac = new AvatarIconFactory();
+				iconfac.init(AVATAR_ICON_SIZE, 
+					function(iconfac) {
+						ext = new MailnagExtension(
+									SHOW_NOTIFICATIONS, 
+									SHOW_INDICATOR, iconfac);
+					});
+			} else {
+				ext = new MailnagExtension(
+									SHOW_NOTIFICATIONS, 
+									SHOW_INDICATOR, null);
+			}
 		},
 		function (owner) {
 			if (ext != null) {

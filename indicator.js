@@ -20,6 +20,7 @@
 
 const St = imports.gi.St;
 const Clutter = imports.gi.Clutter;
+const Pango = imports.gi.Pango;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const Lang = imports.lang;
@@ -30,19 +31,39 @@ const IndicatorMailMenuItem = new Lang.Class({
 	Name: 'IndicatorMailMenuItem',
 	Extends: PopupMenu.PopupBaseMenuItem,
 
-	_init: function(sender, subject) {
+	_init: function(mail, avatarIconFactory) {
 		this.parent();
 		
+		let sender = mail['sender_name'].get_string()[0];
+		if (sender.length == 0) sender = mail['sender_addr'].get_string()[0];
+		let subject = mail['subject'].get_string()[0];
+			
 		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
-		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
 		
+		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
 		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
 		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
+		
+		/* TODO : somehow these linewrap settings are ignored... */
+		senderLabel.clutter_text.line_wrap = false;
+		senderLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+		subjectLabel.clutter_text.line_wrap = false;
+		subjectLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
 		
 		vbox.add(senderLabel);
 		vbox.add(subjectLabel);
 		
 		hbox.add(vbox);
+		
+		if (avatarIconFactory != null) {
+			let avatarIcon = avatarIconFactory.createIconForName(sender);
+			if (avatarIcon != null) {
+				hbox.add(avatarIcon);
+			} else {
+				/*hbox.add(new St.Icon({ icon_name: 'avatar-default', 
+												  icon_size: avatarIconFactory.getIconSize() }));*/
+			}
+		}
 		
 		let closeButton = new St.Button({ reactive: true, can_focus: true, 
 										  track_hover: true, style_class: 'mark-as-read-button' });
@@ -60,9 +81,10 @@ const MailnagIndicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
 	
-	_init: function(maxVisibleMails) {
+	_init: function(maxVisibleMails, avatarIconFactory) {
 		this.parent(0.0, this.Name);
 		this._maxVisisbleMails = maxVisibleMails;
+		this._avatarIconFactory = avatarIconFactory;
 		
 		let icon = new St.Icon({
 			icon_name: INDICATOR_ICON,
@@ -135,11 +157,7 @@ const MailnagIndicator = new Lang.Class({
 							mails.length : this._maxVisisbleMails;
 		
 		for (let i = 0; i < maxMails; i++) {
-			let sender = mails[i]['sender_name'].get_string()[0];
-			if (sender.length == 0) sender = mails[i]['sender_addr'].get_string()[0];
-			let subject = mails[i]['subject'].get_string()[0];
-			let item = new IndicatorMailMenuItem(sender, subject);
-			
+			let item = new IndicatorMailMenuItem(mails[i], this._avatarIconFactory);
 			this.menu.addMenuItem(item);
 		}
 		
