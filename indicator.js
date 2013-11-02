@@ -31,13 +31,15 @@ const IndicatorMailMenuItem = new Lang.Class({
 	Name: 'IndicatorMailMenuItem',
 	Extends: PopupMenu.PopupBaseMenuItem,
 
-	_init: function(mail, avatarIconFactory) {
+	_init: function(mail, avatars, avatarSize) {
 		this.parent();
 		
-		let sender = mail['sender_name'].get_string()[0];
-		if (sender.length == 0) sender = mail['sender_addr'].get_string()[0];
-		let subject = mail['subject'].get_string()[0];
-			
+		let [sender, size] = mail['sender_name'].get_string();
+		let [senderAddr, size] = mail['sender_addr'].get_string();
+		let [subject, size] = mail['subject'].get_string();
+		
+		if (sender.length == 0) sender = senderAddr;
+		
 		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
 		
 		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
@@ -55,14 +57,17 @@ const IndicatorMailMenuItem = new Lang.Class({
 		
 		hbox.add(vbox);
 		
-		if (avatarIconFactory != null) {
-			let avatarIcon = avatarIconFactory.createIconForName(sender);
-			if (avatarIcon != null) {
-				hbox.add(avatarIcon);
-			} else {
-				/*hbox.add(new St.Icon({ icon_name: 'avatar-default', 
-												  icon_size: avatarIconFactory.getIconSize() }));*/
-			}
+		let avatarFile = avatars[senderAddr.toString().toLowerCase()];
+		if (avatarFile != undefined) {
+			let iconBin = new St.Bin({ style_class: 'avatar',
+									   style: 'background-image: url("%s")'.format(avatarFile),
+									   width: avatarSize, height: avatarSize,
+									   x_fill: true,
+									   y_fill: true });
+			hbox.add(iconBin);
+		} else {
+			/*hbox.add(new St.Icon({ icon_name: 'avatar-default', 
+											  icon_size: avatarSize }));*/
 		}
 		
 		let closeButton = new St.Button({ reactive: true, can_focus: true, 
@@ -81,10 +86,11 @@ const MailnagIndicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
 	
-	_init: function(maxVisibleMails, avatarIconFactory) {
+	_init: function(maxVisibleMails, avatars, avatarSize) {
 		this.parent(0.0, this.Name);
 		this._maxVisisbleMails = maxVisibleMails;
-		this._avatarIconFactory = avatarIconFactory;
+		this._avatars = avatars;
+		this._avatarSize = avatarSize;
 		
 		let icon = new St.Icon({
 			icon_name: INDICATOR_ICON,
@@ -157,7 +163,7 @@ const MailnagIndicator = new Lang.Class({
 							mails.length : this._maxVisisbleMails;
 		
 		for (let i = 0; i < maxMails; i++) {
-			let item = new IndicatorMailMenuItem(mails[i], this._avatarIconFactory);
+			let item = new IndicatorMailMenuItem(mails[i], this._avatars, this._avatarSize);
 			this.menu.addMenuItem(item);
 		}
 		

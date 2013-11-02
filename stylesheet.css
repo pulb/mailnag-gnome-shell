@@ -40,6 +40,11 @@
 	font-size: small;
 }
 
+.avatar {
+	border-radius: 4px;
+	background-size:contain;
+}
+
 .menu-item-more-box {
 	font-size: small;
 	font-style: italic;

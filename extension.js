@@ -19,16 +19,14 @@
 */
 
 const Main = imports.ui.main;
-const St = imports.gi.St;
 const MessageTray = imports.ui.messageTray;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Indicator = Me.imports.indicator;
 const Source = Me.imports.source;
-const RemoteSearch = imports.ui.remoteSearch;
-const Search = imports.ui.search;
 
 const MAX_VISIBLE_MAILS = 10;
 const AVATAR_ICON_SIZE = 42;
@@ -59,10 +57,10 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(enableNotifications, enableIndicator, avatarIconFactory) {
+	_init: function(enableNotifications, enableIndicator, avatars) {
 		
 		this._mails = [];
-		this._avatarIconFactory = avatarIconFactory;
+		this._avatars = avatars;
 		this._enableNotifications = enableNotifications;
 		this._enableIndicator = enableIndicator;
 		this._source = null;
@@ -144,7 +142,7 @@ const MailnagExtension = new Lang.Class({
 	
 	_createIndicator: function() {
 		this._indicator = new Indicator.MailnagIndicator(
-				MAX_VISIBLE_MAILS, this._avatarIconFactory);
+				MAX_VISIBLE_MAILS, this._avatars, AVATAR_ICON_SIZE);
 		
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
@@ -188,76 +186,55 @@ const MailnagExtension = new Lang.Class({
 	}
 });
 
-const AvatarIconFactory = new Lang.Class({
-	Name: 'AvatarIconFactory',
-	
-	_init: function() {
-		this._initialized = false;
-		this._completedCallback = null;
-		this._iconSize = 0;
-		this._nameMetaMapping = {};
-		this._searchSystem = new Search.SearchSystem();
-		this._searchSystem.connect('search-updated', 
-			Lang.bind(this, this._search_updated));
-		
-		RemoteSearch.loadRemoteSearchProviders(Lang.bind(this,
-			function(provider) {
-				if (provider.id == "gnome-contacts.desktop") {
-					this._searchSystem.registerProvider(provider);
-				}
-			}));
-	},
-	
-	init: function(iconSize, completedCallback) {
-		if (this._initialized)
-			return;
-		
-		this._iconSize = iconSize;
-		this._completedCallback = completedCallback;
-		
-		// load all contacts that have an email address
-		this._searchSystem.updateSearchResults(["@"]);
-			
-		this._initialized = true;
-	},
-	
-	createIconForName: function(name) {
-		let icon = null;
-		let meta = this._nameMetaMapping[name.toLowerCase()];
-		
-		if (meta != undefined) {
-			icon = meta['createIcon'](this._iconSize);
-		}
-		
-		return icon;
-	},
-	
-	getIconSize: function() {
-		return this._iconSize;
-	},
-	
-	_search_updated: function(searchSystem, results) {
-		let [provider, providerResults] = results;
-		if (providerResults.length == 0) {
-			if (this._completedCallback != null)
-				this._completedCallback(this);
-		} else {				
-			provider.getResultMetas(providerResults, Lang.bind(this,
-				function (metas) {
-					for (let i = 0; i < metas.length; i++) {
-						// Unfortunately the email address isn't available 
-						// in the search result so we have to use the contact 
-						// name (which isn't really unique...) for lookup instead.
-						let name = metas[i]['name'].toLowerCase();
-						this._nameMetaMapping[name] = metas[i];
-					}
-					
-					if (this._completedCallback != null)
-						this._completedCallback(this);
-				}));
+function aggregateAvatarsAsync(completedCallback) {
+	let aggregator = "aggregate-avatars";
+	let result = null;
+	let avatars = {};
+
+	try {
+		result = GLib.spawn_async_with_pipes(
+			null, [aggregator], 
+			null, GLib.SpawnFlags.SEARCH_PATH | 
+					GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+	} catch (ex) {
+		try {
+			result = GLib.spawn_async_with_pipes(
+				Me.path, [aggregator], 
+				null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+		} catch (ex) {
+			logError(ex, "Failed to spawn '%s'".format(aggregator));
 		}
 	}
-});
+
+	if (result == null) {
+		completedCallback(avatars);
+	} else {
+		let [res, pid, stdin_fd, stdout_fd, stderr_fd] = result;		
+		let stdout = new Gio.DataInputStream({ 
+				base_stream: new Gio.UnixInputStream({ fd: stdout_fd, close_fd: true })});
+
+		GLib.close(stdin_fd);
+		GLib.close(stderr_fd);
+
+		let childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, 
+			Lang.bind(this, function(pid, status, requestObject) {
+				let [out, size] = stdout.read_line(null);
+
+				if (size > 0) {
+					let lst = out.toString().split(";");
+					for (let i = 0; i < lst.length; i += 2) {
+						let email = lst[i].toLowerCase();
+						let avatarFile = lst[i + 1];
+						avatars[email] = avatarFile;
+					}
+				}
+
+				stdout.close(null);
+				GLib.source_remove(childWatch);
+				completedCallback(avatars);
+			}));
+	}
+}
 
 let ext = null;
 let watch_id = -1;
@@ -276,17 +253,15 @@ function enable() {
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
 		function (owner) {
 			if (SHOW_AVATARS) {
-				let iconfac = new AvatarIconFactory();
-				iconfac.init(AVATAR_ICON_SIZE, 
-					function(iconfac) {
+				aggregateAvatarsAsync(function(avatars) {
 						ext = new MailnagExtension(
 									SHOW_NOTIFICATIONS, 
-									SHOW_INDICATOR, iconfac);
+									SHOW_INDICATOR, avatars);
 					});
 			} else {
 				ext = new MailnagExtension(
 									SHOW_NOTIFICATIONS, 
-									SHOW_INDICATOR, null);
+									SHOW_INDICATOR, {});
 			}
 		},
 		function (owner) {
