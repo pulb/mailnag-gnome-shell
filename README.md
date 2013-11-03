@@ -10,3 +10,6 @@ This extension requires the Mailnag daemon from the [mailnag-next](https://githu
 Help is very appreciated!
 
 To install the extension just copy it to ~/.local/share/gnome-shell/extensions and enable it in gnome-tweak-tool.
+
+#### Screenshots
+![Screenshot](https://raw.github.com/pulb/mailnag-gnome-shell/docs/docs/screenshots/mailnag-gnome-shell.png)
