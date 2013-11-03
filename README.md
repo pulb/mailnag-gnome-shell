@@ -3,7 +3,7 @@
 Mailnag gnome-shell extension.
 This extension requires the Mailnag daemon from the [mailnag-next](https://github.com/pulb/mailnag/tree/mailnag-next) branch.
 
-#### Features:
+#### Features
 * Notifies about new mails via the messaging tray (including a counter badge).
 * Shows an indicator in the top panel (including counter badge and popup menu).
 
