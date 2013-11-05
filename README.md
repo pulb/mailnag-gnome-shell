@@ -16,8 +16,8 @@ Prior to installation, run `mailnag-config` and ensure that the *libnotify* plug
 * libfolks
 * mailnag
 
-To install the extension type `make install prefix=<INSTALL_PREFIX>` in a terminal (e.g. `make install prefix=/usr>`).  
-That's it. Now fire up `gnome-tweak-tool` and enable the extension.  
+To install the extension type `make install prefix=<INSTALL_PREFIX>` in a terminal  
+(e.g. `make install prefix=/usr>`). That's it. Now fire up `gnome-tweak-tool` and enable the extension.  
 
 __Note:__ If you like to install to *~/.local* (*prefix=~/.local*), make sure *~/.local/bin* is included in your $PATH  
 (alternatively copy *~/.local/bin/aggregate-avatars* to *~/.local/share/gnome-shell/extensions/mailnag@zulu99-gmx-net*).
