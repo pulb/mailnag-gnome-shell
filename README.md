@@ -8,21 +8,19 @@ Mailnag GNOME-Shell extension.
 Help is very appreciated!
 
 #### Installation
-This extension requires the Mailnag daemon from the [mailnag-next](https://github.com/pulb/mailnag/tree/mailnag-next) branch.
+This extension requires the Mailnag daemon from the [mailnag-next](https://github.com/pulb/mailnag/tree/mailnag-next) branch.  
 Prior to installation, run `mailnag-config` and ensure that the *libnotify* plugin is disabled.
 
-##### Requirements
+###### Requirements
 * vala (at compiletime only)
 * libfolks
 * mailnag
 
-To install the extension type `make install prefix=<INSTALL_PREFIX>`  
-in a terminal (e.g. `make install prefix=/usr>`).  
+To install the extension type `make install prefix=<INSTALL_PREFIX>` in a terminal (e.g. `make install prefix=/usr>`).  
 That's it. Now fire up `gnome-tweak-tool` and enable the extension.  
 
-__Note:__ If you want to install to *~/.local* (*prefix=~/.local*),  
-make sure *~/.local/bin* is included in your $PATH (alternatively copy  
-*~/.local/bin/aggregate-avatars* to *~/.local/share/gnome-shell/extensions/mailnag@zulu99-gmx-net*).
+__Note:__ If you like to install to *~/.local* (*prefix=~/.local*), make sure *~/.local/bin* is included in your $PATH  
+(alternatively copy *~/.local/bin/aggregate-avatars* to *~/.local/share/gnome-shell/extensions/mailnag@zulu99-gmx-net*).
 
 #### Screenshots
 ![Screenshot](https://raw.github.com/pulb/mailnag-gnome-shell/docs/docs/screenshots/mailnag-gnome-shell.png)
