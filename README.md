@@ -20,7 +20,7 @@ To install the extension type `make install prefix=<INSTALL_PREFIX>` in a termin
 (e.g. `make install prefix=/usr>`). That's it. Now fire up `gnome-tweak-tool` and enable the extension.  
 
 __Note:__ If you like to install to *~/.local* (*prefix=~/.local*), make sure *~/.local/bin* is included in your $PATH  
-(alternatively copy *~/.local/bin/aggregate-avatars* to *~/.local/share/gnome-shell/extensions/mailnag@zulu99-gmx-net*).
+(alternatively copy *~/.local/bin/aggregate-avatars* to *~/.local/share/gnome-shell/extensions/mailnag@zulu99-gmx.net*).
 
 #### Screenshots
 ![Screenshot](https://raw.github.com/pulb/mailnag-gnome-shell/docs/docs/screenshots/mailnag-gnome-shell.png)
