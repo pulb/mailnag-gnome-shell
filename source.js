@@ -33,6 +33,9 @@ const MailnagSource = new Lang.Class({
 		this._count = 0;
 		this._maxVisisbleMails = maxVisibleMails;
 		this.parent("Mailnag", SOURCE_ICON);
+		
+		Main.messageTray.connect("source-added", 
+			Lang.bind(this, this._onSourceAdded));
 	},
 
 	get count() {
@@ -90,5 +93,25 @@ const MailnagSource = new Lang.Class({
 		}
 		
 		this.notify(n);
+	},
+	
+	_onSourceAdded: function(sender, source) {
+		if (source != this)
+			return;
+
+		// Patch the Source's SummaryItem (left-click popup banner) 
+		// to always scroll to the top instead of to the bottom
+		// (new mails are shown on top of the notification stack).
+		let obj = Main.messageTray._sources.get(this);
+		if (obj != null) {
+			let summaryItem = obj.summaryItem;
+			let origMethod = summaryItem.prepareNotificationStackForShowing;
+			summaryItem.prepareNotificationStackForShowing = function() {
+				origMethod.call(this);
+				summaryItem.scrollTo(St.Side.TOP);
+			}
+			
+			summaryItem._oldMaxScrollAdjustment = -1;
+		}
 	}
 });
