@@ -45,10 +45,11 @@ const MailnagIface = <interface name="mailnag.MailnagService">
     <arg type="u" direction="out" />
 </method>
 <signal name="MailsAdded">
-    <arg type="u" />
+    <arg type="aa{sv}" />
+    <arg type="aa{sv}" />
 </signal>
 <signal name="MailsRemoved">
-    <arg type="u" />
+    <arg type="aa{sv}" />
 </signal>
 </interface>;
 
@@ -75,56 +76,29 @@ const MailnagExtension = new Lang.Class({
 		this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved',
 			Lang.bind(this, this._onMailsRemoved));
 		
-		// TODO : what if Mailnag sends a MailsAdded signal here or after _getMailsAsync()
+		// TODO : what if Mailnag sends a MailsAdded signal here or after GetMailsRemote()
 		// (should happen *extemely* rarely)?
 		// Is it possible to prevent the extension from notifying twice?
 		
 		// Mailnag possibly fired a 'MailsAdded' signal before this extension was started,
 		// so check if Mailnag fetched mails already and pull them manually.
-		let mailCount = this._proxy.GetMailCountSync();
-		if (mailCount > 0) {
-			this._getMailsAsync();
-		}
-	},
-	
-	_getMailsAsync : function() {
 		this._proxy.GetMailsRemote(Lang.bind(this,
-			function(result, error) {
+			function([mails], error) {
 				if (!error) {
-					this._mails = result[0];
-					
-					if (this._enableNotifications) {
-						if (this._source == null) {
-							this._source = new Source.MailnagSource(MAX_VISIBLE_MAILS);
-							// Make sure we get informed if the user 
-							// closes our notification source.
-							this._source.connect('destroy', Lang.bind(this, function() {
-								this._source = null;
-							}));
-							
-							Main.messageTray.add(this._source);
-						}
-						this._source.notifySummary(this._mails);
-					}
-					
-					if (this._enableIndicator)	{
-						if (this._indicator == null) {
-							this._createIndicator();
-						} else {
-							this._indicator.setMails(this._mails);
-						}
+					if (mails.length > 0) {
+						this._handle_new_mails(mails, mails);
 					}
 				}
 			}));
 	},
 	
-	_onMailsAdded: function(proxy, sender, newCount) {
-		this._getMailsAsync();
+	_onMailsAdded: function(proxy, sender, [new_mails, all_mails]) {
+		this._handle_new_mails(new_mails, all_mails);
 	},
 	
-	_onMailsRemoved: function(proxy, sender, newCount) {
+	_onMailsRemoved: function(proxy, sender, [remaining_mails]) {
 		// TODO : not only support removal of *all* mails
-		if (newCount == 0) {
+		if (remaining_mails.length == 0) {
 			this._mails = [];
 		
 			// TODO : update messagtray source
@@ -138,6 +112,64 @@ const MailnagExtension = new Lang.Class({
 				}
 			}
 		}
+	},
+	
+	_handle_new_mails: function(new_mails, all_mails) {
+		this._mails = all_mails;
+		
+		if (this._enableNotifications) {
+			if (this._source == null) {
+				this._source = new Source.MailnagSource(MAX_VISIBLE_MAILS);
+				// Make sure we get informed if the user 
+				// closes our notification source.
+				this._source.connect('destroy', Lang.bind(this, function() {
+					this._source = null;
+				}));
+				
+				Main.messageTray.add(this._source);
+			}
+			
+			let mails = this._prepend_new_mails(new_mails, all_mails);
+			this._source.notifySummary(mails);
+		}
+		
+		if (this._enableIndicator)	{
+			if (this._indicator == null) {
+				this._createIndicator();
+			} else {
+				this._indicator.setMails(all_mails);
+			}
+		}
+		
+	},	
+	
+	_prepend_new_mails: function(new_mails, all_mails) {
+		/* The mail list (all_mails) is sorted by date (mails with most recent 
+		 * date on top). New mails with no date or older mails that come in 
+		 * delayed won't be listed on top. So if a mail with no or an older date 
+		 * arrives, it gives the impression that the top most mail (i.e. the mail 
+		 * with the most recent date) is re-notified.
+		 * To fix that, simply put new mails on top explicitly.*/
+		let mails = new_mails.slice(); /* copy array */
+		
+		for (let i = 0; i < all_mails.length; i++) {
+			let found = false;
+			for (let j = 0; j < new_mails.length; j++) {
+				let [str_id1, size_id1] = all_mails[i]['id'].get_string();
+				let [str_id2, size_id2] = new_mails[j]['id'].get_string();
+				
+				if (str_id1 == str_id2) {
+					found = true;
+					break; /* exit inner for loop*/
+				}
+			}
+			
+			if (!found) {
+				mails.push(all_mails[i]);
+			}
+		}
+		
+		return mails;
 	},
 	
 	_createIndicator: function() {
