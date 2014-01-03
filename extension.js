@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013, 2014 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -101,8 +101,14 @@ const MailnagExtension = new Lang.Class({
 		if (remaining_mails.length == 0) {
 			this._mails = [];
 		
-			// TODO : update messagtray source
-			// (source probably needs to call this.countUpdated() manually)
+			if (this._source != null) {
+				if (this._mails.length == 0) {
+					this._destroySource();
+				} else {
+					// TODO : update messagtray source
+					// (source probably needs to call this.countUpdated() manually)
+				}
+			}
 			
 			if (this._indicator != null) {
 				if (this._mails.length == 0) {
@@ -172,6 +178,13 @@ const MailnagExtension = new Lang.Class({
 		return mails;
 	},
 	
+	_destroySource: function() {
+		if (this._source != null) {
+			this._source.destroy();
+			this._source = null;
+		}
+	},
+	
 	_createIndicator: function() {
 		this._indicator = new Indicator.MailnagIndicator(
 				MAX_VISIBLE_MAILS, this._avatars, AVATAR_ICON_SIZE);
@@ -209,11 +222,7 @@ const MailnagExtension = new Lang.Class({
 			this._proxy.disconnectSignal(this._onMailsRemovedId);
 		}
 		
-		if (this._source != null) {
-			this._source.destroy();
-			this._source = null;
-		}
-		
+		this._destroySource();
 		this._destroyIndicator();
 	}
 });
