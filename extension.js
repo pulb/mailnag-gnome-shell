@@ -44,6 +44,11 @@ const MailnagIface = <interface name="mailnag.MailnagService">
 <method name="GetMailCount">
     <arg type="u" direction="out" />
 </method>
+<method name="Shutdown" />
+<method name="CheckForMails" />
+<method name="MarkMailAsRead">
+    <arg type="s" direction="in" />
+</method>
 <signal name="MailsAdded">
     <arg type="aa{sv}" />
     <arg type="aa{sv}" />
@@ -105,7 +110,7 @@ const MailnagExtension = new Lang.Class({
 				if (this._mails.length == 0) {
 					this._destroySource();
 				} else {
-					// TODO : update messagtray source
+					// TODO : update messagtray source (source.notifySummary(mails)?)
 					// (source probably needs to call this.countUpdated() manually)
 				}
 			}
@@ -187,7 +192,7 @@ const MailnagExtension = new Lang.Class({
 	
 	_createIndicator: function() {
 		this._indicator = new Indicator.MailnagIndicator(
-				MAX_VISIBLE_MAILS, this._avatars, AVATAR_ICON_SIZE);
+				MAX_VISIBLE_MAILS, this._avatars, AVATAR_ICON_SIZE, this);
 		
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
@@ -211,6 +216,56 @@ const MailnagExtension = new Lang.Class({
 	disableIndicator: function() {
 		this._destroyIndicator();
 		this._enableIndicator = false;
+	},
+	
+	markMailAsRead: function(mail_id) {
+		// Find the mail object with the specified mail_id
+		let idx = -1;
+		for (let i = 0; i < this._mails.length; i++) {
+			[id, size] = this._mails[i]['id'].get_string();
+			if (id == mail_id) {
+				idx = i;
+				break;
+			}
+		}
+		
+		// There is no mail object with the specified mail_id -> return
+		if (idx == -1)
+			return;
+		
+		// Remove mail from local mail list
+		this._mails.splice(idx, 1);
+		
+		// Notify the Mailnag daemon to mark the mail as read
+		this._proxy.MarkMailAsReadRemote(mail_id, Lang.bind(this,
+			function(result, error) {
+				if (error) {
+					log("Error: markMailAsReadRemote() failed.");
+				}
+			}));
+		
+		// Update Messagetray Source / Panel Indicator
+		if (this._mails.length > 0)
+		{
+			if (this._source != null) {
+				// TODO : in case mail objects have 
+				// a .is_new property one day, 
+				// call prepend_new_mails(this._mails) first.
+				try {
+					this._source.isMuted = true;
+					this._source.notifySummary(this._mails);
+				} finally {
+					this._source.isMuted = false;
+				}
+			}
+			
+			if (this._indicator != null) {
+				this._indicator.setMails(this._mails);
+			}
+		} else {
+			this._destroySource();
+			this._destroyIndicator();
+		}
 	},
 	
 	dispose: function() {

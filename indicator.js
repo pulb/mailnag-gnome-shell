@@ -31,12 +31,13 @@ const IndicatorMailMenuItem = new Lang.Class({
 	Name: 'IndicatorMailMenuItem',
 	Extends: PopupMenu.PopupBaseMenuItem,
 
-	_init: function(mail, avatars, avatarSize) {
+	_init: function(mail, avatars, avatarSize, extension) {
 		this.parent();
 		
 		let [sender, size] = mail['sender_name'].get_string();
 		let [senderAddr, size] = mail['sender_addr'].get_string();
 		let [subject, size] = mail['subject'].get_string();
+		let [mail_id, size] = mail['id'].get_string();
 		
 		if (sender.length == 0) sender = senderAddr;
 		
@@ -73,10 +74,14 @@ const IndicatorMailMenuItem = new Lang.Class({
 		let closeButton = new St.Button({ reactive: true, can_focus: true, 
 										  track_hover: true, style_class: 'mark-as-read-button' });
 		
+		closeButton.connect('clicked', Lang.bind(this, function() {
+				extension.markMailAsRead(mail_id);
+			}));
+		
 		closeButton.child = new St.Icon({ icon_name: 'edit-delete-symbolic', 
 								style_class: 'popup-menu-icon' });
 		
-		//hbox.add(closeButton);
+		hbox.add(closeButton);
 
 		this.actor.add_child(hbox);
 	}
@@ -86,11 +91,12 @@ const MailnagIndicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
 	
-	_init: function(maxVisibleMails, avatars, avatarSize) {
+	_init: function(maxVisibleMails, avatars, avatarSize, extension) {
 		this.parent(0.0, this.Name);
 		this._maxVisisbleMails = maxVisibleMails;
 		this._avatars = avatars;
 		this._avatarSize = avatarSize;
+		this._extension = extension;
 		
 		let icon = new St.Icon({
 			icon_name: INDICATOR_ICON,
@@ -163,7 +169,8 @@ const MailnagIndicator = new Lang.Class({
 							mails.length : this._maxVisisbleMails;
 		
 		for (let i = 0; i < maxMails; i++) {
-			let item = new IndicatorMailMenuItem(mails[i], this._avatars, this._avatarSize);
+			let item = new IndicatorMailMenuItem(mails[i], this._avatars, 
+				this._avatarSize, this._extension);
 			this.menu.addMenuItem(item);
 		}
 		
