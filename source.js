@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013, 2014 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 */
 
 const Main = imports.ui.main;
+const Shell = imports.gi.Shell;
 const St = imports.gi.St;
+const Gio = imports.gi.Gio;
 const MessageTray = imports.ui.messageTray;
 const Lang = imports.lang;
 
@@ -55,6 +57,20 @@ const MailnagSource = new Lang.Class({
         }
     },
 
+	open: function() {
+		// Get default application for emails.
+		let appInfo = Gio.AppInfo
+			.get_default_for_type("x-scheme-handler/mailto", false);
+		
+		if (appInfo != null) {
+			// Run default email application.
+			let app = Shell.AppSystem.get_default()
+				.lookup_app(appInfo.get_id());
+			if (app != null)
+				app.activate();
+		}
+	},
+	
 	notifySummary: function(mails) {
 		let summary = "";
 		let body = "";
