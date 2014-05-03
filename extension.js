@@ -37,26 +37,29 @@ const SHOW_NOTIFICATIONS = true;
 const SHOW_INDICATOR = true;
 const SHOW_AVATARS = true;
 		
-const MailnagIface = <interface name="mailnag.MailnagService">
-<method name="GetMails">
-    <arg type="aa{sv}" direction="out" />
-</method>
-<method name="GetMailCount">
-    <arg type="u" direction="out" />
-</method>
-<method name="Shutdown" />
-<method name="CheckForMails" />
-<method name="MarkMailAsRead">
-    <arg type="s" direction="in" />
-</method>
-<signal name="MailsAdded">
-    <arg type="aa{sv}" />
-    <arg type="aa{sv}" />
-</signal>
-<signal name="MailsRemoved">
-    <arg type="aa{sv}" />
-</signal>
-</interface>;
+const MailnagIface =
+'<node>\
+	<interface name="mailnag.MailnagService">\
+		<method name="GetMails">\
+			<arg type="aa{sv}" direction="out" />\
+		</method>\
+		<method name="GetMailCount">\
+			<arg type="u" direction="out" />\
+		</method>\
+		<method name="Shutdown" />\
+		<method name="CheckForMails" />\
+		<method name="MarkMailAsRead">\
+			<arg type="s" direction="in" />\
+		</method>\
+		<signal name="MailsAdded">\
+			<arg type="aa{sv}" />\
+			<arg type="aa{sv}" />\
+		</signal>\
+		<signal name="MailsRemoved">\
+			<arg type="aa{sv}" />\
+		</signal>\
+	</interface>\
+</node>';
 
 const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 
