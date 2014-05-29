@@ -14,11 +14,13 @@ Prior to installation, run `mailnag-config` and ensure that the *libnotify* plug
 * libfolks
 * mailnag
 
-To install the extension type `make install prefix=<INSTALL_PREFIX>` in a terminal  
-(e.g. `make install prefix=/usr`). That's it. Now fire up `gnome-tweak-tool` and enable the extension.  
+To install the extension type the following commands in a terminal (root is *not* required):
 
-__Please note:__ If you like to install to *~/.local* (*prefix=~/.local*), make sure *~/.local/bin* is included in your [$PATH](https://wiki.archlinux.org/index.php/Environment_Variables#Defining_Variables_Locally)  
-(alternatively copy *~/.local/bin/aggregate-avatars* to *~/.local/share/gnome-shell/extensions/mailnag@zulu99-gmx.net* after installation).
+	unzip mailnag-gnome-shell-master.zip
+	cd mailnag-gnome-shell-master
+	make install-local
+
+That's it. Now fire up `gnome-tweak-tool` and enable the extension.  
 
 #### Screenshots
 ![Screenshot](https://raw.github.com/pulb/mailnag-gnome-shell/docs/docs/screenshots/mailnag-gnome-shell.png)
