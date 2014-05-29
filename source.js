@@ -19,11 +19,12 @@
 */
 
 const Main = imports.ui.main;
-const Shell = imports.gi.Shell;
 const St = imports.gi.St;
-const Gio = imports.gi.Gio;
 const MessageTray = imports.ui.messageTray;
 const Lang = imports.lang;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
 
 const SOURCE_ICON = 'mail-unread';
 
@@ -56,19 +57,9 @@ const MailnagSource = new Lang.Class({
         	return 0;
         }
     },
-
+	
 	open: function() {
-		// Get default application for emails.
-		let appInfo = Gio.AppInfo
-			.get_default_for_type("x-scheme-handler/mailto", false);
-		
-		if (appInfo != null) {
-			// Run default email application.
-			let app = Shell.AppSystem.get_default()
-				.lookup_app(appInfo.get_id());
-			if (app != null)
-				app.activate();
-		}
+		Utils.openDefaultMailReader();
 	},
 	
 	notifySummary: function(mails) {
@@ -100,6 +91,10 @@ const MailnagSource = new Lang.Class({
 		if (this.notifications.length == 0) {
 			n = new Main.MessageTray.Notification(this, 
 					summary, body, params);
+					
+			n.connect('clicked', function() {
+				Utils.openDefaultMailReader();
+			});
 		} else {
 			n = this.notifications[0];
 			n.update(summary, body, params);

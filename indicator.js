@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013, 2014 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,14 @@
 
 const St = imports.gi.St;
 const Clutter = imports.gi.Clutter;
+const Util = imports.misc.util;
 const Pango = imports.gi.Pango;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const Lang = imports.lang;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
 
 const INDICATOR_ICON = 'mail-unread-symbolic'
 
@@ -165,23 +169,53 @@ const MailnagIndicator = new Lang.Class({
 	_updateMenu: function(mails) {
 		this.menu.removeAll();
 		
+		let item = null;
 		let maxMails = (mails.length <= this._maxVisisbleMails) ? 
 							mails.length : this._maxVisisbleMails;
 		
 		for (let i = 0; i < maxMails; i++) {
-			let item = new IndicatorMailMenuItem(mails[i], this._avatars, 
+			item = new IndicatorMailMenuItem(mails[i], this._avatars, 
 				this._avatarSize, this._extension);
+			
+			item.connect('activate', function() {
+				Utils.openDefaultMailReader();
+			});
+			
 			this.menu.addMenuItem(item);
 		}
 		
 		if (mails.length > this._maxVisisbleMails) {
 			let str = _("(and {0} more)").replace("{0}", (mails.length - this._maxVisisbleMails));
-			let item = new PopupMenu.PopupBaseMenuItem();
+			item = new PopupMenu.PopupBaseMenuItem();
 			item.actor.style_class = 'menu-item-more-box';
 			item.actor.add_child(new St.Label({ text: str }));
 			
 			this.menu.addMenuItem(item);
 		}
+		
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
+		
+		this._add_settings_submenu(this.menu);
+	},
+	
+	_add_settings_submenu: function(menu) {
+		let item = null;
+		let subMenu = new PopupMenu.PopupSubMenuMenuItem(_("Settings"), false);
+		item = new PopupMenu.PopupMenuItem(_("Mailnag Settings"));
+		item.connect('activate', function() {
+			launchApp('mailnag-config.desktop');
+		});
+		
+		subMenu.menu.addMenuItem(item);
+		
+		item = new PopupMenu.PopupMenuItem(_("Extension Settings"));
+		item.connect('activate', function() {
+			Util.spawn(['gnome-shell-extension-prefs', 'mailnag@zulu99-gmx.net']);
+		});
+						
+		subMenu.menu.addMenuItem(item);
+		
+		menu.addMenuItem(subMenu);
 	},
 	
 	setMails: function(mails) {

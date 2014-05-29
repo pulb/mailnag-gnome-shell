@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="mailnag-gnome-shell">
+   <schema path="/org/gnome/shell/extensions/mailnag/" id="org.gnome.shell.extensions.mailnag">
+    <key type="b" name="show-notifications">
+      <default>true</default>
+      <summary>Show notifications</summary>
+      <description>Show notifications in the messagetray</description>
+    </key>
+    <key type="b" name="show-indicator">
+      <default>true</default>
+      <summary>Show indicator</summary>
+      <description>Show an indicator in the top panel</description>
+    </key>
+    <key type="b" name="show-avatars">
+      <default>true</default>
+      <summary>Show avatars</summary>
+      <description>Show avatars in the indicator mail list (if available)</description>
+    </key>
+    <key type="i" name="max-visible-mails">
+      <default>10</default>
+      <summary>Maximum number of visible mails</summary>
+      <description>Maximum number of mails listed in notifications and panel indicator</description>
+    </key>
+  </schema>
+</schemalist>

@@ -1,1 +1,8 @@
-{"shell-version": ["3.12"], "uuid": "mailnag@zulu99-gmx.net", "name": "Mailnag", "description": "Mailnag GNOME-Shell extension"}
+{
+	"shell-version": ["3.12"],
+	"uuid": "mailnag@zulu99-gmx.net",
+	"settings-schema": "org.gnome.shell.extensions.mailnag",
+	"gettext-domain": "mailnag-gnome-shell",
+	"name": "Mailnag",
+	"description": "Mailnag GNOME-Shell extension"
+}

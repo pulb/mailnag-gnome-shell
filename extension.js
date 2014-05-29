@@ -25,17 +25,16 @@ const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 const Indicator = Me.imports.indicator;
 const Source = Me.imports.source;
 
-const MAX_VISIBLE_MAILS = 10;
 const AVATAR_ICON_SIZE = 42;
 
-// TODO : move to extension settings
-// CAUTION: these variable are accessed in enable() as well!
-const SHOW_NOTIFICATIONS = true;
-const SHOW_INDICATOR = true;
-const SHOW_AVATARS = true;
+const SHOW_NOTIFICATIONS_KEY	= 'show-notifications';
+const SHOW_INDICATOR_KEY		= 'show-indicator';
+const SHOW_AVATARS_KEY			= 'show-avatars';
+const MAX_VISIBLE_MAILS_KEY		= 'max-visible-mails';
 		
 const MailnagIface =
 '<node>\
@@ -66,12 +65,13 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(enableNotifications, enableIndicator, avatars) {
+	_init: function(enableNotifications, enableIndicator, maxVisibleMails, avatars) {
 		
 		this._mails = [];
 		this._avatars = avatars;
 		this._enableNotifications = enableNotifications;
 		this._enableIndicator = enableIndicator;
+		this._maxVisibleMails = maxVisibleMails;
 		this._source = null;
 		this._indicator = null;
 		
@@ -133,7 +133,7 @@ const MailnagExtension = new Lang.Class({
 		
 		if (this._enableNotifications) {
 			if (this._source == null) {
-				this._source = new Source.MailnagSource(MAX_VISIBLE_MAILS);
+				this._source = new Source.MailnagSource(this._maxVisibleMails);
 				// Make sure we get informed if the user 
 				// closes our notification source.
 				this._source.connect('destroy', Lang.bind(this, function() {
@@ -195,7 +195,7 @@ const MailnagExtension = new Lang.Class({
 	
 	_createIndicator: function() {
 		this._indicator = new Indicator.MailnagIndicator(
-				MAX_VISIBLE_MAILS, this._avatars, AVATAR_ICON_SIZE, this);
+				this._maxVisibleMails, this._avatars, AVATAR_ICON_SIZE, this);
 		
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
@@ -338,29 +338,36 @@ function aggregateAvatarsAsync(completedCallback) {
 let ext = null;
 let watch_id = -1;
 let enabled = false;
+let settings = null;
 
 function init() {
 }
 
 function enable() {
 	if (enabled) {
-		// Re-enable the indicator when the exteion is re-enabled on screen unlock.
-		if ((ext != null) && SHOW_INDICATOR) ext.enableIndicator();
+		// Re-enable the indicator when the extension is re-enabled on screen unlock.
+		if ((ext != null) && settings.get_boolean(SHOW_INDICATOR_KEY)) ext.enableIndicator();
 		return;
 	}
 	
+	settings = Convenience.getSettings();
+		
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
 		function (owner) {
-			if (SHOW_AVATARS) {
+			if (settings.get_boolean(SHOW_INDICATOR_KEY) && settings.get_boolean(SHOW_AVATARS_KEY)) {
 				aggregateAvatarsAsync(function(avatars) {
 						ext = new MailnagExtension(
-									SHOW_NOTIFICATIONS, 
-									SHOW_INDICATOR, avatars);
+									settings.get_boolean(SHOW_NOTIFICATIONS_KEY), 
+									settings.get_boolean(SHOW_INDICATOR_KEY),
+									settings.get_int(MAX_VISIBLE_MAILS_KEY),
+									avatars);
 					});
 			} else {
 				ext = new MailnagExtension(
-									SHOW_NOTIFICATIONS, 
-									SHOW_INDICATOR, {});
+									settings.get_boolean(SHOW_NOTIFICATIONS_KEY), 
+									settings.get_boolean(SHOW_INDICATOR_KEY),
+									settings.get_int(MAX_VISIBLE_MAILS_KEY),
+									{});
 			}
 		},
 		function (owner) {
@@ -383,6 +390,12 @@ function disable() {
 		if (watch_id > -1) {
 			// TODO : test: does this call the function (owner) callback, so ext.dispose() is called twice?
 			Gio.DBus.session.unwatch_name(watch_id);
+			watch_id = -1;
+		}
+		
+		if (settings != null) {
+			settings.run_dispose();
+			settings = null;
 		}
 		
 		if (ext != null) {
