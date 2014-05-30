@@ -6,7 +6,7 @@ Mailnag GNOME-Shell extension.
 * Shows an indicator in the top panel (including counter badge and popup menu).
 
 #### Installation
-This extension requires the Mailnag daemon from the [mailnag-next](https://github.com/pulb/mailnag/tree/mailnag-next) branch.  
+This extension requires the [Mailnag daemon](https://github.com/pulb/mailnag).  
 Prior to installation, run `mailnag-config` and ensure that the *libnotify* plugin is disabled.
 
 ###### Requirements
