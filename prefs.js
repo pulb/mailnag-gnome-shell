@@ -29,7 +29,7 @@ const Convenience = Me.imports.convenience;
 const Gettext = imports.gettext.domain('mailnag-gnome-shell');
 const _ = Gettext.gettext;
 
-const MAX_VISIBLE_MAILS = 20
+const MAX_VISIBLE_MAILS_LIMIT = 20
 
 /* Workaround for a bug in gnome-shell-extension-prefs that causes the 
  * extension widget to be destroyed twice. */
@@ -52,7 +52,7 @@ const MailnagSettingsWidget = new GObject.Class({
 		let box = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
 		box.add(new Gtk.Label( { label: _('Maximum number of visible mails:') } ));
 		
-		let spinbtn = Gtk.SpinButton.new_with_range(1, MAX_VISIBLE_MAILS, 1);
+		let spinbtn = Gtk.SpinButton.new_with_range(1, MAX_VISIBLE_MAILS_LIMIT, 1);
 		spinbtn.set_value(settings.get_int('max-visible-mails'));
 		settings.bind('max-visible-mails', spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
 		
