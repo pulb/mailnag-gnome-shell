@@ -1,8 +1,12 @@
 post_install() {
-	post-upgrade $1
+	post_upgrade $1
 	echo "Please run gnome-tweak-tool to enable the extension."
 }
 
 post_upgrade() {
 	glib-compile-schemas /usr/share/glib-2.0/schemas
+}
+
+post_remove() {
+	post_upgrade $1
 }
