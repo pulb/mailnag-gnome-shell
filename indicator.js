@@ -203,7 +203,7 @@ const MailnagIndicator = new Lang.Class({
 		let subMenu = new PopupMenu.PopupSubMenuMenuItem(_("Settings"), false);
 		item = new PopupMenu.PopupMenuItem(_("Mailnag Settings"));
 		item.connect('activate', function() {
-			launchApp('mailnag-config.desktop');
+			Utils.launchApp('mailnag-config.desktop');
 		});
 		
 		subMenu.menu.addMenuItem(item);
