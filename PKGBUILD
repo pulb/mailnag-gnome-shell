@@ -20,6 +20,6 @@ build() {
 
 package() {
 	cd ${srcdir}/${pkgname}-${pkgver}
-	make prefix="$pkgdir" install
+	make prefix="$pkgdir"/usr install
  	install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
