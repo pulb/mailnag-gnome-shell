@@ -14,7 +14,7 @@ The extension is available in the [AUR](https://aur.archlinux.org/packages/mailn
 Please either run `yaourt -S mailnag-gnome-shell` or `packer -S mailnag-gnome-shell` (as root) to install the package.
 
 ### Generic Tarballs
-Distribution independent tarball releases are available [here](https://github.com/pulb/mailnag-gnome-shell/releases).
+Distribution independent tarball releases are available [here](https://github.com/pulb/mailnag-gnome-shell/releases).  
 To install the extension type the following commands in a terminal (root is *not* required):
 
 	tar xvf mailnag-gnome-shell-*.tar.gz
