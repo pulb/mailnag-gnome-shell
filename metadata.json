@@ -1,6 +1,6 @@
 {
 	"shell-version": ["3.12"],
-	"uuid": "mailnag@zulu99-gmx.net",
+	"uuid": "mailnag@pulb.github.com",
 	"settings-schema": "org.gnome.shell.extensions.mailnag",
 	"gettext-domain": "mailnag-gnome-shell",
 	"name": "Mailnag",

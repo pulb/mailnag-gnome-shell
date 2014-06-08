@@ -1,6 +1,6 @@
 CC = valac
 LIBS = folks
-UUID = mailnag@zulu99-gmx.net
+UUID = mailnag@pulb.github.com
 FILES = aggregate-avatars.vala
 DATA = extension.js indicator.js source.js utils.js convenience.js prefs.js stylesheet.css metadata.json
 DATADIR = share/gnome-shell/extensions/$(UUID)

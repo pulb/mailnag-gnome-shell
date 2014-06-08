@@ -210,7 +210,7 @@ const MailnagIndicator = new Lang.Class({
 		
 		item = new PopupMenu.PopupMenuItem(_("Extension Settings"));
 		item.connect('activate', function() {
-			Util.spawn(['gnome-shell-extension-prefs', 'mailnag@zulu99-gmx.net']);
+			Util.spawn(['gnome-shell-extension-prefs', 'mailnag@pulb.github.com']);
 		});
 						
 		subMenu.menu.addMenuItem(item);
