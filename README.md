@@ -27,7 +27,7 @@ That's it. Now fire up `gnome-tweak-tool` and enable the extension.
 ###### Requirements
 * vala (at compiletime only)
 * libfolks
-* glib2
+* gnome-shell
 * mailnag
 
 ## Screenshots
