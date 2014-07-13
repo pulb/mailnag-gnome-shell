@@ -1,0 +1,22 @@
+Source: gnome-shell-mailnag
+Section: gnome
+Priority: optional
+Maintainer: Patrick Ulbrich <zulu99@gmx.net>
+Build-Depends: debhelper (>= 9), libfolks-dev, valac
+Standards-Version: 3.9.5
+Homepage: https://github.com/pulb/mailnag-gnome-shell
+Vcs-Git: git://github.com/pulb/mailnag-gnome-shell.git
+Vcs-Browser: https://github.com/pulb/mailnag-gnome-shell.git
+
+Package: gnome-shell-mailnag
+Architecture: any
+Depends: gnome-shell, mailnag (>= 1.0), ${misc:Depends}, ${shlibs:Depends}
+Description: mail notification extension for GNOME Shell
+ This package provides GNOME Shell integration for Mailnag. It includes the
+ following features:
+ .
+   - Notifies about new mails via the messaging tray (including a counter
+     badge)
+   - Shows an indicator in the top panel (including counter badge and popup
+     menu)
+   - Lock screen integration

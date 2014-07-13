@@ -1,0 +1,3 @@
+version=3
+opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/mailnag-gnome-shell-$1\.tar\.gz/ \
+ https://github.com/pulb/mailnag-gnome-shell/releases .*/v?(\d\S*)\.tar\.gz
