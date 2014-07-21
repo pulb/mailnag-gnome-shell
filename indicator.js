@@ -127,7 +127,7 @@ const MailnagIndicator = new Lang.Class({
 			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
 		}));
             
-        this.actor.add_actor(this._iconBin);                      
+		this.actor.add_actor(this._iconBin);
 		this.actor.add_actor(this._counterBin);
 	},
 	
