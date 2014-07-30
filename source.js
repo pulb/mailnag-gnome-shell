@@ -81,9 +81,9 @@ const MailnagSource = new Lang.Class({
 		}
 		
 		if (mails.length > 1) {
-			summary = _("You have {0} new mails.").replace("{0}", mails.length);
+			summary = _("{0} new mails").replace("{0}", mails.length);
 		} else {
-			summary = _("You have a new mail.");
+			summary = _("New mail");
 		}
 		
 		let params = { bannerMarkup : true };
