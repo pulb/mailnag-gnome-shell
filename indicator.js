@@ -107,10 +107,9 @@ const MailnagIndicator = new Lang.Class({
 			style_class: 'system-status-icon'});
 
 		this._iconBin = new St.Bin({ child: icon,
-									 /*width: icon.width, height: icon.height,*/
-									 x_fill: true,
-									 y_fill: true });
-
+									 x_fill: false,
+									 y_fill: false });
+		
 		this._counterLabel = new St.Label({ text: "0",
 											x_align: Clutter.ActorAlign.CENTER,
 											x_expand: true,
@@ -126,7 +125,7 @@ const MailnagIndicator = new Lang.Class({
 			this._counterBin.translation_x = themeNode.get_length('-mailnag-counter-overlap-x');
 			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
 		}));
-            
+		
 		this.actor.add_actor(this._iconBin);
 		this.actor.add_actor(this._counterBin);
 	},
@@ -135,6 +134,9 @@ const MailnagIndicator = new Lang.Class({
 		// the iconBin should fill our entire box
 		this._iconBin.allocate(box, flags);
 
+		// get the allocation box of the indicator icon
+		let iconBox = this._iconBin.child.get_allocation_box();
+		// create a temporary box for calculating the counter allocation
 		let childBox = new Clutter.ActorBox();
 
 		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
@@ -142,30 +144,20 @@ const MailnagIndicator = new Lang.Class({
 
 		if (direction == Clutter.TextDirection.LTR) {
 			// allocate on the right in LTR
-			childBox.x1 = box.x2 - naturalWidth;
-			childBox.x2 = box.x2;
+			childBox.x1 = iconBox.x2 - (naturalWidth / 2);
+			childBox.x2 = childBox.x1 + naturalWidth;
 		} else {
 			// allocate on the left in RTL
-			childBox.x1 = 0;
-			childBox.x2 = naturalWidth;
+			childBox.x1 = iconBox.x1 - (naturalWidth / 2);
+			childBox.x2 = childBox.x1 + naturalWidth;
 		}
 
-		childBox.y1 = box.y2 - naturalHeight;
-		childBox.y2 = box.y2;
+		childBox.y1 = iconBox.y2 - (naturalHeight / 2);
+		childBox.y2 = childBox.y1 + naturalHeight;
 
 		this._counterBin.allocate(childBox, flags);
     },
     
-    _getPreferredWidth: function (actor, forHeight, alloc) {
-        let [min, nat] = this._iconBin.get_preferred_width(forHeight);
-        alloc.min_size = min; alloc.nat_size = nat;
-    },
-
-    _getPreferredHeight: function (actor, forWidth, alloc) {
-        let [min, nat] = this._iconBin.get_preferred_height(forWidth);
-        alloc.min_size = min; alloc.nat_size = nat;
-    },
-	
 	_updateMenu: function(mails) {
 		this.menu.removeAll();
 		

@@ -21,10 +21,10 @@
     color: #ffffff;
     border-radius: 24px;
     font-size: 6pt;
-    padding:2px;
-    min-width:10px;
-    -mailnag-counter-overlap-x: 2px;
-    /*-mailnag-counter-overlap-y: 0px;*/
+    padding: 2px;
+    min-width: 10px;
+    -mailnag-counter-overlap-x: -4px;
+    -mailnag-counter-overlap-y: -2px;
 }
 
 .menu-item-box {
