@@ -10,8 +10,23 @@ Mailnag GNOME-Shell extension.
 This extension requires the [Mailnag daemon](https://github.com/pulb/mailnag).  
 Prior to installation, run `mailnag-config` and ensure that the *libnotify* plugin is disabled.
 
+### Ubuntu
+Mailnag has an official [Ubuntu PPA](https://launchpad.net/~pulb/+archive/mailnag).  
+Issue the following commands in a terminal to enable the PPA and install the extension.  
+
+    sudo add-apt-repository ppa:pulb/mailnag
+    sudo apt-get update
+    sudo apt-get install gnome-shell-mailnag
+
+As of Ubuntu 14.10 (Utopic), this extension is also available in the official repos.  
+Run `sudo apt-get install gnome-shell-mailnag` in a terminal to install it.
+
+### Debian
+This extension is currently available in Debian unstable.  
+Run `sudo apt-get install gnome-shell-mailnag` in a terminal to install it.
+
 ### Arch Linux
-The extension is available in the [AUR](https://aur.archlinux.org/packages/mailnag-gnome-shell/) repository.  
+This extension is available in the [AUR](https://aur.archlinux.org/packages/mailnag-gnome-shell/) repository.  
 Please either run `yaourt -S mailnag-gnome-shell` or `packer -S mailnag-gnome-shell` (as root) to install the package.
 
 ### Generic Tarballs
