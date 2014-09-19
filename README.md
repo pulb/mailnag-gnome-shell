@@ -11,7 +11,7 @@ This extension requires the [Mailnag daemon](https://github.com/pulb/mailnag).
 Prior to installation, run `mailnag-config` and ensure that the *libnotify* plugin is disabled.
 
 ### Ubuntu
-Mailnag has an official [Ubuntu PPA](https://launchpad.net/~pulb/+archive/mailnag).  
+This extension is available in the official [Ubuntu PPA](https://launchpad.net/~pulb/+archive/mailnag).  
 Issue the following commands in a terminal to enable the PPA and install the extension.  
 
     sudo add-apt-repository ppa:pulb/mailnag
