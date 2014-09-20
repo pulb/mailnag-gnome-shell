@@ -17,12 +17,12 @@
 */
 
 .mailnag-counter {
-    background-color: rgba(70, 144, 217, 0.7);
+    background-color: rgba(70, 144, 217, 0.75);
     color: #ffffff;
     border-radius: 24px;
     font-size: 6pt;
-    padding: 2px;
-    min-width: 10px;
+    min-width: 14px;
+    min-height: 14px;
     -mailnag-counter-overlap-x: -4px;
     -mailnag-counter-overlap-y: -2px;
 }
