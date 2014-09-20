@@ -211,7 +211,8 @@ const MailnagIndicator = new Lang.Class({
 	},
 	
 	setMails: function(mails) {
-		this._counterLabel.set_text(mails.length.toString());
+		let label = mails.length <= 99 ? mails.length.toString() : "...";
+		this._counterLabel.set_text(label);
 		this._updateMenu(mails);
 	}
 });
