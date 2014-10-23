@@ -37,8 +37,12 @@ const MailnagSource = new Lang.Class({
 		this._maxVisisbleMails = maxVisibleMails;
 		this.parent("Mailnag", SOURCE_ICON);
 		
-		Main.messageTray.connect("source-added", 
+		this._onSourceAddedId = Main.messageTray.connect("source-added", 
 			Lang.bind(this, this._onSourceAdded));
+		
+		this.connect('destroy', Lang.bind(this, function() {
+			Main.messageTray.disconnect(this._onSourceAddedId);
+		}));
 	},
 
 	get count() {
