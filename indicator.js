@@ -187,6 +187,12 @@ const MailnagIndicator = new Lang.Class({
 		
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
 		
+		item = new PopupMenu.PopupMenuItem(_("Mark All Mails As Read"));
+		item.connect('activate', Lang.bind(this, function() {
+			this._extension.markAllMailsAsRead();
+		}));
+		this.menu.addMenuItem(item);
+		
 		this._add_settings_submenu(this.menu);
 	},
 	

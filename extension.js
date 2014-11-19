@@ -271,6 +271,26 @@ const MailnagExtension = new Lang.Class({
 		}
 	},
 	
+	markAllMailsAsRead: function() {
+		// TODO: add a markAllMailsAsRead() method to the DBus interface
+		for (let i = 0; i < this._mails.length; i++) {
+			[id, size] = this._mails[i]['id'].get_string();
+		
+			// Notify the Mailnag daemon to mark the mail as read
+			this._proxy.MarkMailAsReadRemote(id, Lang.bind(this,
+				function(result, error) {
+					if (error) {
+						log("Error: markMailAsReadRemote() failed.");
+					}
+				}));
+		}
+		
+		this._mails = [];
+		
+		this._destroySource();
+		this._destroyIndicator();
+	},
+	
 	dispose: function() {
 		if (this._onMailsAddedId > -1) {
 			this._proxy.disconnectSignal(this._onMailsAddedId);
