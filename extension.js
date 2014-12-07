@@ -240,12 +240,11 @@ const MailnagExtension = new Lang.Class({
 		this._mails.splice(idx, 1);
 		
 		// Notify the Mailnag daemon to mark the mail as read
-		this._proxy.MarkMailAsReadRemote(mail_id, Lang.bind(this,
-			function(result, error) {
-				if (error) {
-					log("Error: markMailAsReadRemote() failed.");
-				}
-			}));
+		this._proxy.MarkMailAsReadRemote(mail_id, function(result, error) {
+			if (error) {
+				log("Error: markMailAsReadRemote() failed.");
+			}
+		});
 		
 		// Update Messagetray Source / Panel Indicator
 		if (this._mails.length > 0)
@@ -277,18 +276,25 @@ const MailnagExtension = new Lang.Class({
 			[id, size] = this._mails[i]['id'].get_string();
 		
 			// Notify the Mailnag daemon to mark the mail as read
-			this._proxy.MarkMailAsReadRemote(id, Lang.bind(this,
-				function(result, error) {
-					if (error) {
-						log("Error: markMailAsReadRemote() failed.");
-					}
-				}));
+			this._proxy.MarkMailAsReadRemote(id, function(result, error) {
+				if (error) {
+					log("Error: markMailAsReadRemote() failed.");
+				}
+			});
 		}
 		
 		this._mails = [];
 		
 		this._destroySource();
 		this._destroyIndicator();
+	},
+	
+	checkForMails: function() {
+		this._proxy.CheckForMailsRemote(function(result, error) {
+			if (error) {
+				log("Error: checkForMailsRemote() failed.");
+			}
+		});
 	},
 	
 	dispose: function() {
@@ -336,7 +342,7 @@ function aggregateAvatarsAsync(completedCallback) {
 		GLib.close(stderr_fd);
 
 		let childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, 
-			Lang.bind(this, function(pid, status, requestObject) {
+			function(pid, status, requestObject) {
 				let [out, size] = stdout.read_line(null);
 
 				if (size > 0) {
@@ -351,7 +357,7 @@ function aggregateAvatarsAsync(completedCallback) {
 				stdout.close(null);
 				GLib.source_remove(childWatch);
 				completedCallback(avatars);
-			}));
+			});
 	}
 }
 

@@ -78,9 +78,9 @@ const IndicatorMailMenuItem = new Lang.Class({
 		let closeButton = new St.Button({ reactive: true, can_focus: true, 
 										  track_hover: true, style_class: 'mark-as-read-button' });
 		
-		closeButton.connect('clicked', Lang.bind(this, function() {
-				extension.markMailAsRead(mail_id);
-			}));
+		closeButton.connect('clicked', function() {
+			extension.markMailAsRead(mail_id);
+		});
 		
 		closeButton.child = new St.Icon({ icon_name: 'edit-delete-symbolic', 
 								style_class: 'popup-menu-icon' });
@@ -187,11 +187,18 @@ const MailnagIndicator = new Lang.Class({
 		
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
 		
-		item = new PopupMenu.PopupMenuItem(_("Mark All Mails As Read"));
+		item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
 		item.connect('activate', Lang.bind(this, function() {
 			this._extension.markAllMailsAsRead();
 		}));
 		this.menu.addMenuItem(item);
+
+		item = new PopupMenu.PopupMenuItem(_("Check For Mail"));
+		item.connect('activate', Lang.bind(this, function() {
+			this._extension.checkForMails();
+		}));
+		this.menu.addMenuItem(item);
+
 		
 		this._add_settings_submenu(this.menu);
 	},
