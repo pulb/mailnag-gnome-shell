@@ -2,7 +2,7 @@
 
 pkgname=mailnag-gnome-shell
 pkgver=3.14.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Mailnag GNOME-Shell extension"
 arch=('i686' 'x86_64' 'armv6h' 'armv7h')
 url="https://github.com/pulb/mailnag-gnome-shell"
@@ -14,12 +14,11 @@ md5sums=('ca4ca3dce2ec597893f1e8d51b70292e')
 install='mailnag-gnome-shell.install'
 
 build() {
-	cd ${srcdir}/${pkgname}-${pkgver}
+	cd ${pkgname}-${pkgver}
 	make
 }
 
 package() {
-	cd ${srcdir}/${pkgname}-${pkgver}
+	cd ${pkgname}-${pkgver}
 	make prefix="$pkgdir"/usr install
- 	install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
