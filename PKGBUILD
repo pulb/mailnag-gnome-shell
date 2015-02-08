@@ -14,11 +14,11 @@ md5sums=('ca4ca3dce2ec597893f1e8d51b70292e')
 install='mailnag-gnome-shell.install'
 
 build() {
-	cd ${pkgname}-${pkgver}
+	cd $pkgname-$pkgver
 	make
 }
 
 package() {
-	cd ${pkgname}-${pkgver}
+	cd $pkgname-$pkgver
 	make prefix="$pkgdir"/usr install
 }
