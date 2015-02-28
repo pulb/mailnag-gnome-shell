@@ -4,7 +4,7 @@ Mailnag GNOME-Shell extension.
 #### Features
 * Notifies about new mails via the messaging tray (including a counter badge).
 * Shows an indicator in the top panel (including counter badge and popup menu).
-* Lock screen integration
+* Lock screen integration.
 
 ## Installation
 This extension requires the [Mailnag daemon](https://github.com/pulb/mailnag).  
