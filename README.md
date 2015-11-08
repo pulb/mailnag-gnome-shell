@@ -1,5 +1,6 @@
 # mailnag-gnome-shell
-GNOME-Shell extension that shows a mail indicator in the top panel (including mail counter and popup menu).
+GNOME-Shell extension that shows a mail indicator in the top panel  
+(including mail counter and popup menu).
 
 ## Installation
 This extension requires the [Mailnag daemon](https://github.com/pulb/mailnag).  
