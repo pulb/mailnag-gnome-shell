@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013, 2014 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2015 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 */
 
 const Main = imports.ui.main;
-const MessageTray = imports.ui.messageTray;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
@@ -27,12 +26,9 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const Indicator = Me.imports.indicator;
-const Source = Me.imports.source;
 
 const AVATAR_ICON_SIZE = 42;
 
-const SHOW_NOTIFICATIONS_KEY	= 'show-notifications';
-const SHOW_INDICATOR_KEY		= 'show-indicator';
 const SHOW_AVATARS_KEY			= 'show-avatars';
 const MAX_VISIBLE_MAILS_KEY		= 'max-visible-mails';
 		
@@ -65,14 +61,11 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(enableNotifications, enableIndicator, maxVisibleMails, avatars) {
+	_init: function(maxVisibleMails, avatars) {
 		
 		this._mails = [];
 		this._avatars = avatars;
-		this._enableNotifications = enableNotifications;
-		this._enableIndicator = enableIndicator;
 		this._maxVisibleMails = maxVisibleMails;
-		this._source = null;
 		this._indicator = null;
 		
 		this._proxy = new MailnagDbus(Gio.DBus.session,
@@ -108,15 +101,6 @@ const MailnagExtension = new Lang.Class({
 		// TODO : not only support removal of *all* mails
 		if (remaining_mails.length == 0) {
 			this._mails = [];
-		
-			if (this._source != null) {
-				if (this._mails.length == 0) {
-					this._destroySource();
-				} else {
-					// TODO : update messagtray source (source.notifySummary(mails)?)
-					// (source probably needs to call this.countUpdated() manually)
-				}
-			}
 			
 			if (this._indicator != null) {
 				if (this._mails.length == 0) {
@@ -131,65 +115,10 @@ const MailnagExtension = new Lang.Class({
 	_handle_new_mails: function(new_mails, all_mails) {
 		this._mails = all_mails;
 		
-		if (this._enableNotifications) {
-			if (this._source == null) {
-				this._source = new Source.MailnagSource(this._maxVisibleMails);
-				// Make sure we get informed if the user 
-				// closes our notification source.
-				this._source.connect('destroy', Lang.bind(this, function() {
-					this._source = null;
-				}));
-				
-				Main.messageTray.add(this._source);
-			}
-			
-			let mails = this._prepend_new_mails(new_mails, all_mails);
-			this._source.notifySummary(mails);
-		}
-		
-		if (this._enableIndicator)	{
-			if (this._indicator == null) {
-				this._createIndicator();
-			} else {
-				this._indicator.setMails(all_mails);
-			}
-		}
-		
-	},	
-	
-	_prepend_new_mails: function(new_mails, all_mails) {
-		/* The mail list (all_mails) is sorted by date (mails with most recent 
-		 * date on top). New mails with no date or older mails that come in 
-		 * delayed won't be listed on top. So if a mail with no or an older date 
-		 * arrives, it gives the impression that the top most mail (i.e. the mail 
-		 * with the most recent date) is re-notified.
-		 * To fix that, simply put new mails on top explicitly.*/
-		let mails = new_mails.slice(); /* copy array */
-		
-		for (let i = 0; i < all_mails.length; i++) {
-			let found = false;
-			for (let j = 0; j < new_mails.length; j++) {
-				let [str_id1, size_id1] = all_mails[i]['id'].get_string();
-				let [str_id2, size_id2] = new_mails[j]['id'].get_string();
-				
-				if (str_id1 == str_id2) {
-					found = true;
-					break; /* exit inner for loop*/
-				}
-			}
-			
-			if (!found) {
-				mails.push(all_mails[i]);
-			}
-		}
-		
-		return mails;
-	},
-	
-	_destroySource: function() {
-		if (this._source != null) {
-			this._source.destroy();
-			this._source = null;
+		if (this._indicator == null) {
+			this._createIndicator();
+		} else {
+			this._indicator.setMails(all_mails);
 		}
 	},
 	
@@ -206,19 +135,6 @@ const MailnagExtension = new Lang.Class({
 			this._indicator.destroy();
 			this._indicator = null;
 		}
-	},
-	
-	enableIndicator: function() {
-		if ((this._indicator == null) && (this._mails.length > 0)) {
-			this._createIndicator();
-		}
-		
-		this._enableIndicator = true;
-	},
-	
-	disableIndicator: function() {
-		this._destroyIndicator();
-		this._enableIndicator = false;
 	},
 	
 	markMailAsRead: function(mail_id) {
@@ -246,26 +162,13 @@ const MailnagExtension = new Lang.Class({
 			}
 		});
 		
-		// Update Messagetray Source / Panel Indicator
+		// Update Panel Indicator
 		if (this._mails.length > 0)
-		{
-			if (this._source != null) {
-				// TODO : in case mail objects have 
-				// a .is_new property one day, 
-				// call prepend_new_mails(this._mails) first.
-				try {
-					this._source.isMuted = true;
-					this._source.notifySummary(this._mails);
-				} finally {
-					this._source.isMuted = false;
-				}
-			}
-			
+		{			
 			if (this._indicator != null) {
 				this._indicator.setMails(this._mails);
 			}
 		} else {
-			this._destroySource();
 			this._destroyIndicator();
 		}
 	},
@@ -284,8 +187,6 @@ const MailnagExtension = new Lang.Class({
 		}
 		
 		this._mails = [];
-		
-		this._destroySource();
 		this._destroyIndicator();
 	},
 	
@@ -306,7 +207,6 @@ const MailnagExtension = new Lang.Class({
 			this._proxy.disconnectSignal(this._onMailsRemovedId);
 		}
 		
-		this._destroySource();
 		this._destroyIndicator();
 	}
 });
@@ -363,35 +263,24 @@ function aggregateAvatarsAsync(completedCallback) {
 
 let ext = null;
 let watch_id = -1;
-let enabled = false;
 let settings = null;
 
 function init() {
 }
 
-function enable() {
-	if (enabled) {
-		// Re-enable the indicator when the extension is re-enabled on screen unlock.
-		if ((ext != null) && settings.get_boolean(SHOW_INDICATOR_KEY)) ext.enableIndicator();
-		return;
-	}
-	
+function enable() {	
 	settings = Convenience.getSettings();
 		
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
 		function (owner) {
-			if (settings.get_boolean(SHOW_INDICATOR_KEY) && settings.get_boolean(SHOW_AVATARS_KEY)) {
+			if (settings.get_boolean(SHOW_AVATARS_KEY)) {
 				aggregateAvatarsAsync(function(avatars) {
 						ext = new MailnagExtension(
-									settings.get_boolean(SHOW_NOTIFICATIONS_KEY), 
-									settings.get_boolean(SHOW_INDICATOR_KEY),
 									settings.get_int(MAX_VISIBLE_MAILS_KEY),
 									avatars);
 					});
 			} else {
 				ext = new MailnagExtension(
-									settings.get_boolean(SHOW_NOTIFICATIONS_KEY), 
-									settings.get_boolean(SHOW_INDICATOR_KEY),
 									settings.get_int(MAX_VISIBLE_MAILS_KEY),
 									{});
 			}
@@ -402,33 +291,22 @@ function enable() {
 				ext = null;
 			}
 		});
-	
-	enabled = true;
 }
 
 function disable() {
-	let isLockScreenMode = !Main.sessionMode.allowExtensions;
-	// Don't allow the extension to be disabled on lockscreen activation.
-	// Just remove the indicator from the top panel.
-	if (isLockScreenMode) {
-		if (ext != null) ext.disableIndicator();
-	} else {
-		if (watch_id > -1) {
-			// TODO : test: does this call the function (owner) callback, so ext.dispose() is called twice?
-			Gio.DBus.session.unwatch_name(watch_id);
-			watch_id = -1;
-		}
-		
-		if (settings != null) {
-			settings.run_dispose();
-			settings = null;
-		}
-		
-		if (ext != null) {
-			ext.dispose();
-			ext = null;
-		}
-		
-		enabled = false;
+	if (watch_id > -1) {
+		// TODO : test: does this call the function (owner) callback, so ext.dispose() is called twice?
+		Gio.DBus.session.unwatch_name(watch_id);
+		watch_id = -1;
+	}
+	
+	if (settings != null) {
+		settings.run_dispose();
+		settings = null;
+	}
+	
+	if (ext != null) {
+		ext.dispose();
+		ext = null;
 	}
 }
