@@ -3,7 +3,7 @@ Upstream-Name: mailnag-gnome-shell
 Source: https://github.com/pulb/mailnag-gnome-shell
 
 Files: *
-Copyright: 2013-2014 Patrick Ulbrich <zulu99@gmx.net>
+Copyright: 2013-2015 Patrick Ulbrich <zulu99@gmx.net>
 License: GPL-2.0+
 
 Files: debian/*

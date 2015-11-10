@@ -12,11 +12,5 @@ Package: gnome-shell-mailnag
 Architecture: any
 Depends: gnome-shell, mailnag (>= 1.0), ${misc:Depends}, ${shlibs:Depends}
 Description: mail notification extension for GNOME Shell
- This package provides GNOME Shell integration for Mailnag. It includes the
- following features:
- .
-   - Notifies about new mails via the messaging tray (including a counter
-     badge)
-   - Shows an indicator in the top panel (including counter badge and popup
-     menu)
-   - Lock screen integration
+ This package provides GNOME Shell integration for Mailnag 
+ via an indicator in the top panel.
