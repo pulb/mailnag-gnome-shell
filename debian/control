@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/pulb/mailnag-gnome-shell.git
 
 Package: gnome-shell-mailnag
 Architecture: any
-Depends: gnome-shell, mailnag (>= 1.0), ${misc:Depends}, ${shlibs:Depends}
+Depends: gnome-shell (>= 3.16), mailnag (>= 1.0), ${misc:Depends}, ${shlibs:Depends}
 Description: mail notification extension for GNOME Shell
  This package provides GNOME Shell integration for Mailnag 
  via an indicator in the top panel.
