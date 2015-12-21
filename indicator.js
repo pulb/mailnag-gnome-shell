@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013, 2014 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2015 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ const IndicatorMailMenuItem = new Lang.Class({
 		
 		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
 		
-		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
+		let vbox = new St.BoxLayout({ vertical: true, x_expand: true, style_class: 'menu-item-label-box' });
 		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
 		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
 		

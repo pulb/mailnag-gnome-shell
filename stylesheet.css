@@ -31,6 +31,10 @@
 	spacing: 12px;
 }
 
+.menu-item-label-box {
+	width: 22em;
+}
+
 .sender-label {
 	font-size: medium;
 	font-weight: bold;
