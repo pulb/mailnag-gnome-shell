@@ -29,10 +29,7 @@
 
 .menu-item-box {
 	spacing: 12px;
-}
-
-.menu-item-label-box {
-	width: 22em;
+	width: 360px;
 }
 
 .sender-label {

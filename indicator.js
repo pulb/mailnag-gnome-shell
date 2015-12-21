@@ -47,7 +47,7 @@ const IndicatorMailMenuItem = new Lang.Class({
 		
 		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
 		
-		let vbox = new St.BoxLayout({ vertical: true, x_expand: true, style_class: 'menu-item-label-box' });
+		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
 		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
 		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
 		
