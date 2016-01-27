@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2015 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,11 @@ const MailnagSettingsWidget = new GObject.Class({
 		settings.bind('show-avatars', checkbtn_avatars, 'active', Gio.SettingsBindFlags.DEFAULT);
 		
 		this.add(checkbtn_avatars);
+		
+		let checkbtn_remove = new Gtk.CheckButton( { label: _("Remove indicator icon if maillist is empty") } );
+		settings.bind('remove-indicator', checkbtn_remove, 'active', Gio.SettingsBindFlags.DEFAULT);
+		
+		this.add(checkbtn_remove);
 		
 		this.connect('destroy', Lang.bind(this, function() {
 			this._destroyed = true;

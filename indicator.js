@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2015 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -185,14 +185,16 @@ const MailnagIndicator = new Lang.Class({
 			this.menu.addMenuItem(item);
 		}
 		
-		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
+		if (mails.length > 0) {
+			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
+			
+			item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
+			item.connect('activate', Lang.bind(this, function() {
+				this._extension.markAllMailsAsRead();
+			}));
+			this.menu.addMenuItem(item);
+		}
 		
-		item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
-		item.connect('activate', Lang.bind(this, function() {
-			this._extension.markAllMailsAsRead();
-		}));
-		this.menu.addMenuItem(item);
-
 		item = new PopupMenu.PopupMenuItem(_("Check For Mail"));
 		item.connect('activate', Lang.bind(this, function() {
 			this._extension.checkForMails();
@@ -226,6 +228,7 @@ const MailnagIndicator = new Lang.Class({
 	setMails: function(mails) {
 		let label = mails.length <= 99 ? mails.length.toString() : "...";
 		this._counterLabel.set_text(label);
+		this._counterBin.visible = (mails.length > 0);
 		this._updateMenu(mails);
 	}
 });

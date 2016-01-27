@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2015 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ const AVATAR_ICON_SIZE = 42;
 
 const SHOW_AVATARS_KEY			= 'show-avatars';
 const MAX_VISIBLE_MAILS_KEY		= 'max-visible-mails';
+const REMOVE_INDICATOR_KEY		= 'remove-indicator';
 		
 const MailnagIface =
 '<node>\
@@ -61,11 +62,12 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(maxVisibleMails, avatars) {
+	_init: function(maxVisibleMails, removeIndicator, avatars) {
 		
 		this._mails = [];
 		this._avatars = avatars;
 		this._maxVisibleMails = maxVisibleMails;
+		this._removeIndicator = removeIndicator;
 		this._indicator = null;
 		
 		this._proxy = new MailnagDbus(Gio.DBus.session,
@@ -86,7 +88,7 @@ const MailnagExtension = new Lang.Class({
 		this._proxy.GetMailsRemote(Lang.bind(this,
 			function([mails], error) {
 				if (!error) {
-					if (mails.length > 0) {
+					if ((mails.length > 0) || !this._removeIndicator) {
 						this._handle_new_mails(mails, mails);
 					}
 				}
@@ -103,7 +105,7 @@ const MailnagExtension = new Lang.Class({
 			this._mails = [];
 			
 			if (this._indicator != null) {
-				if (this._mails.length == 0) {
+				if ((this._mails.length == 0) && this._removeIndicator) {
 					this._destroyIndicator();
 				} else {
 					this._indicator.setMails(this._mails);
@@ -162,14 +164,12 @@ const MailnagExtension = new Lang.Class({
 			}
 		});
 		
-		// Update Panel Indicator
-		if (this._mails.length > 0)
-		{			
-			if (this._indicator != null) {
-				this._indicator.setMails(this._mails);
-			}
-		} else {
+		// Update Panel Indicator		
+		if ((this._mails.length == 0) && this._removeIndicator) {
 			this._destroyIndicator();
+		} else {
+			if (this._indicator != null)
+				this._indicator.setMails(this._mails);
 		}
 	},
 	
@@ -187,7 +187,13 @@ const MailnagExtension = new Lang.Class({
 		}
 		
 		this._mails = [];
-		this._destroyIndicator();
+		
+		if (this._removeIndicator) {
+			this._destroyIndicator();
+		} else {
+			if (this._indicator != null)
+				this._indicator.setMails(this._mails);
+		}
 	},
 	
 	checkForMails: function() {
@@ -277,11 +283,13 @@ function enable() {
 				aggregateAvatarsAsync(function(avatars) {
 						ext = new MailnagExtension(
 									settings.get_int(MAX_VISIBLE_MAILS_KEY),
+									settings.get_boolean(REMOVE_INDICATOR_KEY),
 									avatars);
 					});
 			} else {
 				ext = new MailnagExtension(
 									settings.get_int(MAX_VISIBLE_MAILS_KEY),
+									settings.get_boolean(REMOVE_INDICATOR_KEY),
 									{});
 			}
 		},
