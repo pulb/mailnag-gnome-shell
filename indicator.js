@@ -128,6 +128,8 @@ const MailnagIndicator = new Lang.Class({
 		
 		this.actor.add_actor(this._iconBin);
 		this.actor.add_actor(this._counterBin);
+		
+		this.setMails([]);
 	},
 	
 	_allocate: function(actor, box, flags) {
