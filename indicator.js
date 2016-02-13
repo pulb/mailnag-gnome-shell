@@ -82,7 +82,7 @@ const IndicatorMailMenuItem = new Lang.Class({
 			extension.markMailAsRead(mail_id);
 		});
 		
-		closeButton.child = new St.Icon({ icon_name: 'edit-delete-symbolic', 
+		closeButton.child = new St.Icon({ icon_name: 'window-close-symbolic',
 								style_class: 'popup-menu-icon' });
 		
 		hbox.add(closeButton);
