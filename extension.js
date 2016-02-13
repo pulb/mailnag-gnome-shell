@@ -80,7 +80,7 @@ const MailnagExtension = new Lang.Class({
 			Lang.bind(this, this._onMailsRemoved));
 		
 		// TODO : what if Mailnag sends a MailsAdded signal here or after GetMailsRemote()
-		// (should happen *extemely* rarely)?
+		// (should happen *extremely* rarely)?
 		// Is it possible to prevent the extension from notifying twice?
 		
 		// Mailnag possibly fired a 'MailsAdded' signal before this extension was started,
