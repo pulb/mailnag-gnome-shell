@@ -14,7 +14,7 @@
     <key type="i" name="max-visible-mails">
       <default>10</default>
       <summary>Maximum number of visible mails</summary>
-      <description>Maximum number of mails listed in notifications and panel indicator</description>
+      <description>Maximum number of mails listed in the panel indicator</description>
     </key>
   </schema>
 </schemalist>
