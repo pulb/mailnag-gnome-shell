@@ -207,10 +207,12 @@ const MailnagExtension = new Lang.Class({
 	dispose: function() {
 		if (this._onMailsAddedId > -1) {
 			this._proxy.disconnectSignal(this._onMailsAddedId);
+			this._onMailsAddedId = -1;
 		}
 		
 		if (this._onMailsRemovedId > -1) {
 			this._proxy.disconnectSignal(this._onMailsRemovedId);
+			this._onMailsRemovedId = -1;
 		}
 		
 		this._destroyIndicator();
