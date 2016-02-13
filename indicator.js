@@ -204,10 +204,10 @@ const MailnagIndicator = new Lang.Class({
 		this.menu.addMenuItem(item);
 
 		
-		this._add_settings_submenu(this.menu);
+		this._addSettingsSubmenu(this.menu);
 	},
 	
-	_add_settings_submenu: function(menu) {
+	_addSettingsSubmenu: function(menu) {
 		let item = null;
 		let subMenu = new PopupMenu.PopupSubMenuMenuItem(_("Settings"), false);
 		item = new PopupMenu.PopupMenuItem(_("Mailnag Settings"));
