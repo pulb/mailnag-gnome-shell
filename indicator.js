@@ -95,9 +95,10 @@ const MailnagIndicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
 	
-	_init: function(maxVisibleMails, avatars, avatarSize, extension) {
+	_init: function(maxVisibleMails, groupByAccount, avatars, avatarSize, extension) {
 		this.parent(0.0, this.Name);
 		this._maxVisisbleMails = maxVisibleMails;
+		this._groupByAccount = groupByAccount;
 		this._avatars = avatars;
 		this._avatarSize = avatarSize;
 		this._extension = extension;
@@ -161,33 +162,28 @@ const MailnagIndicator = new Lang.Class({
     },
     
 	_updateMenu: function(mails) {
+		let item = null;
 		this.menu.removeAll();
 		
-		let item = null;
-		let maxMails = (mails.length <= this._maxVisisbleMails) ? 
-							mails.length : this._maxVisisbleMails;
-		
-		for (let i = 0; i < maxMails; i++) {
-			item = new IndicatorMailMenuItem(mails[i], this._avatars, 
-				this._avatarSize, this._extension);
-			
-			item.connect('activate', function() {
-				Utils.openDefaultMailReader();
-			});
-			
-			this.menu.addMenuItem(item);
-		}
-		
-		if (mails.length > this._maxVisisbleMails) {
-			let str = _("(and {0} more)").replace("{0}", (mails.length - this._maxVisisbleMails));
-			item = new PopupMenu.PopupBaseMenuItem();
-			item.actor.style_class = 'menu-item-more-box';
-			item.actor.add_child(new St.Label({ text: str }));
-			
-			this.menu.addMenuItem(item);
-		}
-		
 		if (mails.length > 0) {
+			let maxMails = (mails.length <= this._maxVisisbleMails) ? 
+							mails.length : this._maxVisisbleMails;
+							
+			if (this._groupByAccount && (mails[0]['account_name'] != undefined)) {
+				this._addGroupedMailItems(this.menu, mails, maxMails);
+			} else {
+				this._addMailItems(this.menu, mails, maxMails);
+				
+				if (mails.length > this._maxVisisbleMails) {
+					let str = _("(and {0} more)").replace("{0}", (mails.length - this._maxVisisbleMails));
+					item = new PopupMenu.PopupBaseMenuItem();
+					item.actor.style_class = 'menu-item-more-box';
+					item.actor.add_child(new St.Label({ text: str }));
+
+					this.menu.addMenuItem(item);
+				}
+			}		
+
 			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
 			
 			item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
@@ -203,8 +199,77 @@ const MailnagIndicator = new Lang.Class({
 		}));
 		this.menu.addMenuItem(item);
 
-		
 		this._addSettingsSubmenu(this.menu);
+	},
+	
+	_addMailItems: function(menu, mails, maxMails) {
+		for (let m of mails) {
+			let item = new IndicatorMailMenuItem(m, this._avatars, 
+				this._avatarSize, this._extension);
+
+			item.connect('activate', function() {
+				Utils.openDefaultMailReader();
+			});
+
+			menu.addMenuItem(item);
+		}
+	},
+	
+	_addGroupedMailItems: function(menu, mails, maxMails) {
+		//
+		// Group mails by account
+		//
+		let groups = new Map();
+		
+		for (let m of mails) {
+			let [name, size] = m['account_name'].get_string();
+			
+			if (!groups.has(name))
+				groups.set(name, [])
+			
+			groups.get(name).push(m);
+		}		
+		
+		//
+		// Trim mails of groups
+		//
+		let groupsTrimmed = new Map();
+		let counter = maxMails;
+		
+		counter = Math.min(counter, mails.length);
+		// Make sure all accounts are shown (i.e. at least one mail per account).
+		counter = Math.max(counter, groups.size);
+		
+		while (counter > 0) {
+			for ([k, v] of groups) {
+				if (v.length > 0) {
+					if (!groupsTrimmed.has(k))
+						groupsTrimmed.set(k, [])
+					
+					let m = v.shift();
+					groupsTrimmed.get(k).push(m);
+					counter--;
+					
+					if (counter == 0)
+						break;
+				}
+			}
+		}
+		
+		//
+		// Add groups to the menu
+		//
+		let keys = [...groupsTrimmed.keys()].sort();
+
+		for (let k of keys) {
+			let mails = groupsTrimmed.get(k);
+			let remainingMails = groups.get(k);
+			let header = remainingMails.length == 0 ? k : "%s (%d/%d)".format(k, mails.length, mails.length + remainingMails.length);
+			let item = new PopupMenu.PopupMenuItem(header, { style_class: 'account-group-header', reactive: false, can_focus: false });
+			
+			menu.addMenuItem(item);
+			this._addMailItems(menu, mails, mails.length);
+		}
 	},
 	
 	_addSettingsSubmenu: function(menu) {

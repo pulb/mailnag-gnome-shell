@@ -60,6 +60,11 @@ const MailnagSettingsWidget = new GObject.Class({
 		
 		this.add(checkbtn_avatars);
 		
+		let checkbtn_group = new Gtk.CheckButton( { label: _("Group mails by account") } );
+		settings.bind('group-by-account', checkbtn_group, 'active', Gio.SettingsBindFlags.DEFAULT);
+		
+		this.add(checkbtn_group);
+		
 		let checkbtn_remove = new Gtk.CheckButton( { label: _("Remove indicator icon if maillist is empty") } );
 		settings.bind('remove-indicator', checkbtn_remove, 'active', Gio.SettingsBindFlags.DEFAULT);
 		

@@ -1,4 +1,4 @@
-/* Copyright 2013 Patrick Ulbrich <zulu99@gmx.net>
+/* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,12 @@
     min-height: 14px;
     -mailnag-counter-overlap-x: -4px;
     -mailnag-counter-overlap-y: -2px;
+}
+
+.account-group-header {
+	color: #8e8e80;
+	font-size: medium;
+	font-weight: bold;
 }
 
 .menu-item-box {

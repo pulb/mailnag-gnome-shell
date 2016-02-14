@@ -11,6 +11,11 @@
       <summary>Remove indicator icon</summary>
       <description>Removes the indicator icon if the maillist is empty</description>
     </key>
+    <key type="b" name="group-by-account">
+      <default>false</default>
+      <summary>Group mails by account</summary>
+      <description>Group mails by account</description>
+    </key>
     <key type="i" name="max-visible-mails">
       <default>10</default>
       <summary>Maximum number of visible mails</summary>
