@@ -203,8 +203,8 @@ const MailnagIndicator = new Lang.Class({
 	},
 	
 	_addMailItems: function(menu, mails, maxMails) {
-		for (let m of mails) {
-			let item = new IndicatorMailMenuItem(m, this._avatars, 
+		for (let i = 0; i < maxMails; i++) {
+			let item = new IndicatorMailMenuItem(mails[i], this._avatars, 
 				this._avatarSize, this._extension);
 
 			item.connect('activate', function() {
