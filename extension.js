@@ -269,30 +269,56 @@ function aggregateAvatarsAsync(completedCallback) {
 	}
 }
 
+function createExt(s, avatars) {
+	return new MailnagExtension(
+						s.get_int(MAX_VISIBLE_MAILS_KEY),
+						s.get_boolean(REMOVE_INDICATOR_KEY),
+						avatars);
+}
+
 let ext = null;
 let watch_id = -1;
 let settings = null;
+let cachedAvatars = null;
+let reloadInProgress = false;
 
 function init() {
 }
 
 function enable() {	
 	settings = Convenience.getSettings();
-		
+	
+	// Register changed handler for gsettings.
+	// (Restarts the extension if settings
+	// have been changed, e.g. via prefs.js)
+	settings.connect('changed', function(settings, key) {
+		if ((ext != null) && !reloadInProgress) {
+			ext.dispose();
+
+			if ((cachedAvatars == null) && (key == SHOW_AVATARS_KEY) && settings.get_boolean(key)) {
+				reloadInProgress = true;
+				aggregateAvatarsAsync(function(avatars) {
+						cachedAvatars = avatars;
+						ext = createExt(settings, avatars);
+						reloadInProgress = false;
+					});
+			} else {							
+				ext = createExt(settings, settings.get_boolean(SHOW_AVATARS_KEY) ? cachedAvatars : {});
+			}
+		}
+	});
+
+	// Register dbus watch handlers - create the extension 
+	// if the Mailnag daemon is running / remove it if the daemon is gone.
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
 		function (owner) {
 			if (settings.get_boolean(SHOW_AVATARS_KEY)) {
 				aggregateAvatarsAsync(function(avatars) {
-						ext = new MailnagExtension(
-									settings.get_int(MAX_VISIBLE_MAILS_KEY),
-									settings.get_boolean(REMOVE_INDICATOR_KEY),
-									avatars);
+						cachedAvatars = avatars;
+						ext = createExt(settings, avatars);
 					});
 			} else {
-				ext = new MailnagExtension(
-									settings.get_int(MAX_VISIBLE_MAILS_KEY),
-									settings.get_boolean(REMOVE_INDICATOR_KEY),
-									{});
+				ext = createExt(settings, {});
 			}
 		},
 		function (owner) {
@@ -309,6 +335,9 @@ function disable() {
 		Gio.DBus.session.unwatch_name(watch_id);
 		watch_id = -1;
 	}
+	
+	cachedAvatars = null;
+	reloadInProgress = false;
 	
 	if (settings != null) {
 		settings.run_dispose();
