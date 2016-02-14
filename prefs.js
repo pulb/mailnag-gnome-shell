@@ -55,7 +55,7 @@ const MailnagSettingsWidget = new GObject.Class({
 		box.add(spinbtn);
 		this.add(box);
 		
-		let checkbtn_avatars = new Gtk.CheckButton( { label: _("Show Avatars") } );
+		let checkbtn_avatars = new Gtk.CheckButton( { label: _("Show avatars") } );
 		settings.bind('show-avatars', checkbtn_avatars, 'active', Gio.SettingsBindFlags.DEFAULT);
 		
 		this.add(checkbtn_avatars);
