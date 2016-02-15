@@ -60,6 +60,11 @@ const MailnagSettingsWidget = new GObject.Class({
 		
 		this.add(checkbtn_avatars);
 		
+		let checkbtn_dates = new Gtk.CheckButton( { label: _("Show dates") } );
+		settings.bind('show-dates', checkbtn_dates, 'active', Gio.SettingsBindFlags.DEFAULT);
+		
+		this.add(checkbtn_dates);
+		
 		let checkbtn_group = new Gtk.CheckButton( { label: _("Group mails by account") } );
 		settings.bind('group-by-account', checkbtn_group, 'active', Gio.SettingsBindFlags.DEFAULT);
 		

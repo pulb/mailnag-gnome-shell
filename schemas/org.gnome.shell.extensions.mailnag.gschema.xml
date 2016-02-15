@@ -6,6 +6,11 @@
       <summary>Show avatars</summary>
       <description>Show avatars in the indicator mail list (if available)</description>
     </key>
+    <key type="b" name="show-dates">
+      <default>true</default>
+      <summary>Show dates</summary>
+      <description>Show labels indicating the date of a mail</description>
+    </key>
     <key type="b" name="remove-indicator">
       <default>true</default>
       <summary>Remove indicator icon</summary>

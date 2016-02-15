@@ -35,18 +35,25 @@ const IndicatorMailMenuItem = new Lang.Class({
 	Name: 'IndicatorMailMenuItem',
 	Extends: PopupMenu.PopupBaseMenuItem,
 
-	_init: function(mail, avatars, avatarSize, extension) {
-		this.parent();
-		
+	_init: function(mail, avatars, avatarSize, showDates, extension) {
+		this.parent({ reactive: true, can_focus: false, activate: false, hover: false });
+
 		let [sender, size] = mail['sender_name'].get_string();
 		let [senderAddr, size] = mail['sender_addr'].get_string();
 		let [subject, size] = mail['subject'].get_string();
 		let [mail_id, size] = mail['id'].get_string();
+		let datetime = mail['datetime'].get_int32();
 		
 		if (sender.length == 0) sender = senderAddr;
 		
-		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'menu-item-box' });
+		let hbox = new St.BoxLayout({ vertical: false, x_expand: true, 
+									  reactive: true, can_focus: true, track_hover: true,
+									  style_class: 'menu-item-box'});
 		
+		hbox.connect('button-release-event', Lang.bind(this, this._onButtonReleaseEvent));
+		hbox.connect('touch-event', Lang.bind(this, this._onTouchEvent));
+		hbox.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
+			
 		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
 		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
 		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
@@ -57,7 +64,18 @@ const IndicatorMailMenuItem = new Lang.Class({
 		subjectLabel.clutter_text.line_wrap = false;
 		subjectLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
 		
-		vbox.add(senderLabel);
+		if (showDates) {
+			let hbox2 = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'sender-date-box' });
+			let dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'date-label' });
+
+			hbox2.add(senderLabel);
+			hbox2.add(dateLabel, { expand: true, x_fill: false, x_align: St.Align.END });
+			
+			vbox.add(hbox2);
+		} else {
+			vbox.add(senderLabel);
+		}
+		
 		vbox.add(subjectLabel);
 		
 		hbox.add(vbox);
@@ -88,6 +106,32 @@ const IndicatorMailMenuItem = new Lang.Class({
 		hbox.add(closeButton);
 
 		this.actor.add_child(hbox);
+	},
+	
+	_onButtonReleaseEvent: function (actor, event) {
+		Utils.openDefaultMailReader();
+		this.activate(event);
+		return Clutter.EVENT_STOP;
+	},
+
+	_onTouchEvent: function (actor, event) {
+		if (event.type() == Clutter.EventType.TOUCH_END) {
+			Utils.openDefaultMailReader();
+			this.activate(event);
+			return Clutter.EVENT_STOP;
+		}
+		return Clutter.EVENT_PROPAGATE;
+	},
+
+	_onKeyPressEvent: function (actor, event) {
+		let symbol = event.get_key_symbol();
+
+		if (symbol == Clutter.KEY_space || symbol == Clutter.KEY_Return) {
+			Utils.openDefaultMailReader();
+			this.activate(event);
+			return Clutter.EVENT_STOP;
+		}
+		return Clutter.EVENT_PROPAGATE;
 	}
 });
 
@@ -95,9 +139,10 @@ const MailnagIndicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
 	
-	_init: function(maxVisibleMails, groupByAccount, avatars, avatarSize, extension) {
+	_init: function(maxVisibleMails, showDates, groupByAccount, avatars, avatarSize, extension) {
 		this.parent(0.0, this.Name);
 		this._maxVisisbleMails = maxVisibleMails;
+		this._showDates = showDates;
 		this._groupByAccount = groupByAccount;
 		this._avatars = avatars;
 		this._avatarSize = avatarSize;
@@ -205,11 +250,7 @@ const MailnagIndicator = new Lang.Class({
 	_addMailItems: function(menu, mails, maxMails) {
 		for (let i = 0; i < maxMails; i++) {
 			let item = new IndicatorMailMenuItem(mails[i], this._avatars, 
-				this._avatarSize, this._extension);
-
-			item.connect('activate', function() {
-				Utils.openDefaultMailReader();
-			});
+				this._avatarSize, this._showDates, this._extension);
 
 			menu.addMenuItem(item);
 		}

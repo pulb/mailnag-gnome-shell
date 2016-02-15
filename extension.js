@@ -27,10 +27,11 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const Indicator = Me.imports.indicator;
 
-const AVATAR_ICON_SIZE = 42;
+const AVATAR_ICON_SIZE = 38;
 
 const SHOW_AVATARS_KEY			= 'show-avatars';
 const MAX_VISIBLE_MAILS_KEY		= 'max-visible-mails';
+const SHOW_DATES_KEY			= 'show-dates';
 const GROUP_BY_ACCOUNT_KEY		= 'group-by-account'
 const REMOVE_INDICATOR_KEY		= 'remove-indicator';
 
@@ -63,11 +64,12 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(maxVisibleMails, groupByAccount, removeIndicator, avatars) {
+	_init: function(maxVisibleMails, showDates, groupByAccount, removeIndicator, avatars) {
 		
 		this._mails = [];
 		this._avatars = avatars;
 		this._maxVisibleMails = maxVisibleMails;
+		this._showDates = showDates;
 		this._groupByAccount = groupByAccount;
 		this._removeIndicator = removeIndicator;
 		this._indicator = null;
@@ -128,8 +130,8 @@ const MailnagExtension = new Lang.Class({
 	
 	_createIndicator: function() {
 		this._indicator = new Indicator.MailnagIndicator(
-				this._maxVisibleMails, this._groupByAccount,
-				this._avatars, AVATAR_ICON_SIZE, this);
+				this._maxVisibleMails, this._showDates, 
+				this._groupByAccount, this._avatars, AVATAR_ICON_SIZE, this);
 		
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
@@ -275,6 +277,7 @@ function aggregateAvatarsAsync(completedCallback) {
 function createExt(s, avatars) {
 	return new MailnagExtension(
 						s.get_int(MAX_VISIBLE_MAILS_KEY),
+						s.get_boolean(SHOW_DATES_KEY),
 						s.get_boolean(GROUP_BY_ACCOUNT_KEY),
 						s.get_boolean(REMOVE_INDICATOR_KEY),
 						avatars);
