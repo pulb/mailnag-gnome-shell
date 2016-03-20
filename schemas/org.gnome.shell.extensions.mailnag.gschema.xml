@@ -11,6 +11,21 @@
       <summary>Show dates</summary>
       <description>Show labels indicating the date of a mail</description>
     </key>
+    <key type="b" name="show-mark-all-as-read-button">
+      <default>true</default>
+      <summary>Show Mark-All-As-Read button</summary>
+      <description>Show a button to mark all mails as read</description>
+    </key>
+    <key type="b" name="show-check-for-mail-button">
+      <default>true</default>
+      <summary>Show Check-For-Mail-Button</summary>
+      <description>Show a button to check for mail</description>
+    </key>
+    <key type="b" name="show-settings-button">
+      <default>true</default>
+      <summary>Show Settings button</summary>
+      <description>Show a button to open a settings submenu</description>
+    </key>
     <key type="b" name="remove-indicator">
       <default>true</default>
       <summary>Remove indicator icon</summary>

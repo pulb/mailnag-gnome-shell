@@ -29,6 +29,7 @@ const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
+const Opts = Me.imports.opts;
 
 const INDICATOR_ICON	= 'mail-unread-symbolic'
 const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
@@ -161,13 +162,9 @@ const MailnagIndicator = new Lang.Class({
 	Name: 'MailnagIndicator',
 	Extends: PanelMenu.Button,
 	
-	_init: function(maxVisibleMails, showDates, groupByAccount, avatars, avatarSize, extension) {
+	_init: function(options, extension) {
 		this.parent(0.0, this.Name);
-		this._maxVisisbleMails = maxVisibleMails;
-		this._showDates = showDates;
-		this._groupByAccount = groupByAccount;
-		this._avatars = avatars;
-		this._avatarSize = avatarSize;
+		this._opts = options;
 		this._extension = extension;
 		
 		this._icon = new St.Icon({
@@ -231,16 +228,16 @@ const MailnagIndicator = new Lang.Class({
 		this.menu.removeAll();
 		
 		if (mails.length > 0) {
-			let maxMails = (mails.length <= this._maxVisisbleMails) ? 
-							mails.length : this._maxVisisbleMails;
+			let maxMails = (mails.length <= this._opts.maxVisibleMails) ? 
+							mails.length : this._opts.maxVisibleMails;
 							
-			if (this._groupByAccount && (mails[0]['account_name'] != undefined)) {
+			if (this._opts.groupMailsByAccount && (mails[0]['account_name'] != undefined)) {
 				this._addGroupedMailItems(this.menu, mails, maxMails);
 			} else {
 				this._addMailItems(this.menu, mails, maxMails);
 				
-				if (mails.length > this._maxVisisbleMails) {
-					let str = _("(and {0} more)").replace("{0}", (mails.length - this._maxVisisbleMails));
+				if (mails.length > this._opts.maxVisibleMails) {
+					let str = _("(and {0} more)").replace("{0}", (mails.length - this._opts.maxVisibleMails));
 					item = new PopupMenu.PopupBaseMenuItem(INACTIVE_ITEM);
 					item.actor.add_child(new St.Label({ text: str, style_class: 'more-label' }));
 
@@ -248,48 +245,61 @@ const MailnagIndicator = new Lang.Class({
 				}
 			}		
 
-			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
+			if (this._opts.menuActions != Opts.ACTION_FLAGS.NONE)
+				this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem())
 			
-			item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
-			item.connect('activate', Lang.bind(this, function() {
-				// We call markAllMailsAsRead() on the mainloop (deferred) 
-				// because it will cause the menu to be rebuilt
-				// (the 'activate' event is closing the menu and 
-				// rebuilding it while it is being closed, somehow 
-				// reopens the menu).
-				Mainloop.idle_add(Lang.bind(this, function() {
-					this._extension.markAllMailsAsRead();
-					return false;
+			if (this._opts.menuActions & Opts.ACTION_FLAGS.MARK_ALL_AS_READ) {
+				item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
+				item.connect('activate', Lang.bind(this, function() {
+					// We call markAllMailsAsRead() on the mainloop (deferred) 
+					// because it will cause the menu to be rebuilt
+					// (the 'activate' event is closing the menu and 
+					// rebuilding it while it is being closed, somehow 
+					// reopens the menu).
+					Mainloop.idle_add(Lang.bind(this, function() {
+						this._extension.markAllMailsAsRead();
+						return false;
+					}));
 				}));
+				this.menu.addMenuItem(item);
+			}
+		}
+		
+		if (this._opts.menuActions & Opts.ACTION_FLAGS.CHECK_FOR_MAIL) {
+			item = new PopupMenu.PopupMenuItem(_("Check For Mail"));
+			item.connect('activate', Lang.bind(this, function() {
+				this._extension.checkForMails();
 			}));
 			this.menu.addMenuItem(item);
 		}
 		
-		item = new PopupMenu.PopupMenuItem(_("Check For Mail"));
-		item.connect('activate', Lang.bind(this, function() {
-			this._extension.checkForMails();
-		}));
-		this.menu.addMenuItem(item);
-
-		this._addSettingsSubmenu(this.menu);
+		if (this._opts.menuActions & Opts.ACTION_FLAGS.SETTINGS)
+			this._addSettingsSubmenu(this.menu);
 		
-		// Fix hover effect of the focused mail menu-item after menu rebuild
-		let [x, y] = global.get_pointer();
-		let actor = global.stage.get_actor_at_pos(Clutter.PickMode.REACTIVE, x, y);
-		if ((actor != null) && (actor.isMailnagMailItem)) {
-			actor.hover = true;
+		if (this.menu.isOpen) {
+			if (mails.length == 0) {
+				// It the menu is open and the last mail was removed by the user,
+				// close the menu.
+				this.menu.close();
+			} else {
+				// Fix hover effect of the focused mail menu-item after menu rebuild
+				let [x, y] = global.get_pointer();
+				let actor = global.stage.get_actor_at_pos(Clutter.PickMode.REACTIVE, x, y);
+				if ((actor != null) && (actor.isMailnagMailItem)) {
+					actor.hover = true;
+				}
+		
+				// If the menu is open, set the key-focus on the panel icon
+				// so the focus won't get lost if a mail was removed via the delete key.
+				this.actor.grab_key_focus();
+			}
 		}
-		
-		// If the menu is open, set the key-focus on the panel icon
-		// so the focus won't get lost if a mail was removed via the delete key.
-		if (this.menu.isOpen)
-			this.actor.grab_key_focus();
 	},
 	
 	_addMailItems: function(menu, mails, maxMails) {
 		for (let i = 0; i < maxMails; i++) {
-			let item = new IndicatorMailMenuItem(mails[i], this._avatars, 
-				this._avatarSize, this._showDates, this._extension);
+			let item = new IndicatorMailMenuItem(mails[i], this._opts.avatars, 
+				this._opts.avatarSize, this._opts.showDates, this._extension);
 
 			menu.addMenuItem(item);
 		}

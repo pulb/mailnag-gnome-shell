@@ -26,14 +26,24 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const Indicator = Me.imports.indicator;
+const Opts = Me.imports.opts;
 
 const AVATAR_ICON_SIZE = 38;
 
-const SHOW_AVATARS_KEY			= 'show-avatars';
-const MAX_VISIBLE_MAILS_KEY		= 'max-visible-mails';
-const SHOW_DATES_KEY			= 'show-dates';
-const GROUP_BY_ACCOUNT_KEY		= 'group-by-account'
-const REMOVE_INDICATOR_KEY		= 'remove-indicator';
+const SHOW_AVATARS_KEY					= 'show-avatars';
+const MAX_VISIBLE_MAILS_KEY				= 'max-visible-mails';
+const SHOW_DATES_KEY					= 'show-dates';
+const SHOW_MARK_ALL_AS_READ_BUTTON_KEY	= 'show-mark-all-as-read-button';
+const SHOW_CHECK_FOR_MAIL_BUTTON_KEY	= 'show-check-for-mail-button';
+const SHOW_SETTINGS_BUTTON_KEY			= 'show-settings-button';
+const GROUP_BY_ACCOUNT_KEY				= 'group-by-account';
+const REMOVE_INDICATOR_KEY				= 'remove-indicator';
+
+const KeyActionMap = new Map([
+	[ SHOW_MARK_ALL_AS_READ_BUTTON_KEY,	Opts.ACTION_FLAGS.MARK_ALL_AS_READ ],
+	[ SHOW_CHECK_FOR_MAIL_BUTTON_KEY,	Opts.ACTION_FLAGS.CHECK_FOR_MAIL ],
+	[ SHOW_SETTINGS_BUTTON_KEY,			Opts.ACTION_FLAGS.SETTINGS ]
+]);
 
 const MailnagIface =
 '<node>\
@@ -64,14 +74,10 @@ const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 const MailnagExtension = new Lang.Class({
 	Name: 'MailnagExtension',
 	
-	_init: function(maxVisibleMails, showDates, groupByAccount, removeIndicator, avatars) {
+	_init: function(options) {
 		
 		this._mails = [];
-		this._avatars = avatars;
-		this._maxVisibleMails = maxVisibleMails;
-		this._showDates = showDates;
-		this._groupByAccount = groupByAccount;
-		this._removeIndicator = removeIndicator;
+		this._opts = options;
 		this._indicator = null;
 		
 		this._proxy = new MailnagDbus(Gio.DBus.session,
@@ -92,7 +98,7 @@ const MailnagExtension = new Lang.Class({
 		this._proxy.GetMailsRemote(Lang.bind(this,
 			function([mails], error) {
 				if (!error) {
-					if ((mails.length > 0) || !this._removeIndicator) {
+					if ((mails.length > 0) || !this._opts.removeIndicator) {
 						this._handle_new_mails(mails, mails);
 					}
 				}
@@ -109,7 +115,7 @@ const MailnagExtension = new Lang.Class({
 			this._mails = [];
 			
 			if (this._indicator != null) {
-				if ((this._mails.length == 0) && this._removeIndicator) {
+				if ((this._mails.length == 0) && this._opts.removeIndicator) {
 					this._destroyIndicator();
 				} else {
 					this._indicator.setMails(this._mails);
@@ -129,10 +135,7 @@ const MailnagExtension = new Lang.Class({
 	},
 	
 	_createIndicator: function() {
-		this._indicator = new Indicator.MailnagIndicator(
-				this._maxVisibleMails, this._showDates, 
-				this._groupByAccount, this._avatars, AVATAR_ICON_SIZE, this);
-		
+		this._indicator = new Indicator.MailnagIndicator(this._opts, this);
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
 	},
@@ -170,7 +173,7 @@ const MailnagExtension = new Lang.Class({
 		});
 		
 		// Update Panel Indicator		
-		if ((this._mails.length == 0) && this._removeIndicator) {
+		if ((this._mails.length == 0) && this._opts.removeIndicator) {
 			this._destroyIndicator();
 		} else {
 			if (this._indicator != null)
@@ -193,7 +196,7 @@ const MailnagExtension = new Lang.Class({
 		
 		this._mails = [];
 		
-		if (this._removeIndicator) {
+		if (this._opts.removeIndicator) {
 			this._destroyIndicator();
 		} else {
 			if (this._indicator != null)
@@ -275,12 +278,23 @@ function aggregateAvatarsAsync(completedCallback) {
 }
 
 function createExt(s, avatars) {
-	return new MailnagExtension(
-						s.get_int(MAX_VISIBLE_MAILS_KEY),
-						s.get_boolean(SHOW_DATES_KEY),
-						s.get_boolean(GROUP_BY_ACCOUNT_KEY),
-						s.get_boolean(REMOVE_INDICATOR_KEY),
-						avatars);
+	
+	let opts = new Opts.Options();
+	
+	opts.maxVisibleMails 		= s.get_int(MAX_VISIBLE_MAILS_KEY);
+	opts.showDates				= s.get_boolean(SHOW_DATES_KEY);
+	opts.groupMailsByAccount	= s.get_boolean(GROUP_BY_ACCOUNT_KEY);
+	opts.removeIndicator		= s.get_boolean(REMOVE_INDICATOR_KEY);
+	opts.avatars				= avatars;
+	opts.avatarSize				= AVATAR_ICON_SIZE;
+	opts.menuActions			= Opts.ACTION_FLAGS.NONE;
+	
+	for ([k, v] of KeyActionMap) {
+		if (s.get_boolean(k))
+			opts.menuActions |= v;
+	}
+	
+	return new MailnagExtension(opts);
 }
 
 let ext = null;

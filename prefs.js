@@ -55,25 +55,33 @@ const MailnagSettingsWidget = new GObject.Class({
 		box.add(spinbtn);
 		this.add(box);
 		
-		let checkbtn_avatars = new Gtk.CheckButton( { label: _("Show avatars") } );
-		settings.bind('show-avatars', checkbtn_avatars, 'active', Gio.SettingsBindFlags.DEFAULT);
+		let checkbtn_remove = new Gtk.CheckButton( { label: _('Remove indicator icon if maillist is empty') } );
+		settings.bind('remove-indicator', checkbtn_remove, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_remove);
 		
-		this.add(checkbtn_avatars);
-		
-		let checkbtn_dates = new Gtk.CheckButton( { label: _("Show dates") } );
-		settings.bind('show-dates', checkbtn_dates, 'active', Gio.SettingsBindFlags.DEFAULT);
-		
-		this.add(checkbtn_dates);
-		
-		let checkbtn_group = new Gtk.CheckButton( { label: _("Group mails by account") } );
+		let checkbtn_group = new Gtk.CheckButton( { label: _('Group mails by account') } );
 		settings.bind('group-by-account', checkbtn_group, 'active', Gio.SettingsBindFlags.DEFAULT);
-		
 		this.add(checkbtn_group);
 		
-		let checkbtn_remove = new Gtk.CheckButton( { label: _("Remove indicator icon if maillist is empty") } );
-		settings.bind('remove-indicator', checkbtn_remove, 'active', Gio.SettingsBindFlags.DEFAULT);
+		let checkbtn_avatars = new Gtk.CheckButton( { label: _('Show avatars') } );
+		settings.bind('show-avatars', checkbtn_avatars, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_avatars);
 		
-		this.add(checkbtn_remove);
+		let checkbtn_dates = new Gtk.CheckButton( { label: _('Show dates') } );
+		settings.bind('show-dates', checkbtn_dates, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_dates);
+		
+		let checkbtn_mark = new Gtk.CheckButton( { label: _('Show Mark-All-As-Read button') } );
+		settings.bind('show-mark-all-as-read-button', checkbtn_mark, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_mark);
+		
+		let checkbtn_check = new Gtk.CheckButton( { label: _('Show Check-For-Mail button') } );
+		settings.bind('show-check-for-mail-button', checkbtn_check, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_check);
+		
+		let checkbtn_settings = new Gtk.CheckButton( { label: _('Show Settings button') } );
+		settings.bind('show-settings-button', checkbtn_settings, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_settings);
 	}
 });
 
