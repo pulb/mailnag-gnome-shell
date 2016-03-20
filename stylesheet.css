@@ -27,12 +27,6 @@
     -mailnag-counter-overlap-y: -2px;
 }
 
-.account-group-header {
-	color: #8e8e80;
-	font-size: medium;
-	font-weight: bold;
-}
-
 .menu-item-box {
 	background-color: #454c4c;
 	padding:6px;
@@ -40,9 +34,22 @@
 	spacing: 12px;
 	width: 24em;
 }
+
 .menu-item-box:hover,
 .menu-item-box:focus {
 	background-color: #5d6767;
+}
+
+.account-group-label {
+	color: #8e8e80;
+	font-size: medium;
+	font-weight: bold;
+}
+
+.more-label {
+	color: #8e8e80;
+	font-size: small;
+	font-style: italic;
 }
 
 .sender-label {
@@ -50,7 +57,7 @@
 	font-weight: bold;
 }
 
-.sender-date-box {
+.generic-box {
 	spacing: 12px;
 }
 
@@ -63,31 +70,15 @@
 	font-size: small;
 }
 
+.overflow-badge {
+	color:#393f3f;
+	background-color: #59594f; /*#8e8e80;*/
+	font-size: small;
+	padding: 0em 0.4em 0em 0.4em;
+	border-radius: 4px;
+}
+
 .avatar {
 	border-radius: 4px;
 	background-size:contain;
-}
-
-/* Based on "something" of gnome-shell.css */
-.menu-item-more-box {
-	font-size: small;
-	font-style: italic;
-	spacing: 12px;
-}
-.menu-item-more-box:ltr {
-    padding: .4em 1.75em .4em 0em;
-}
-.menu-item-more-box:rtl {
-    padding: .4em 0em .4em 1.75em;
-}
-
-.mark-as-read-button {
-	color: #e6e6e6;
-}
-.mark-as-read-button:hover,
-.mark-as-read-button:focus {
-	color: white;
-}
-.mark-as-read-button:active {
-	color: black;
 }

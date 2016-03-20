@@ -29,20 +29,28 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
-const INDICATOR_ICON = 'mail-unread-symbolic'
-
+const INDICATOR_ICON	= 'mail-unread-symbolic'
+const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
+ 
 const IndicatorMailMenuItem = new Lang.Class({
 	Name: 'IndicatorMailMenuItem',
 	Extends: PopupMenu.PopupBaseMenuItem,
 
 	_init: function(mail, avatars, avatarSize, showDates, extension) {
-		this.parent({ reactive: true, can_focus: false, activate: false, hover: false });
-
-		let [sender, size] = mail['sender_name'].get_string();
-		let [senderAddr, size] = mail['sender_addr'].get_string();
-		let [subject, size] = mail['subject'].get_string();
-		let [mail_id, size] = mail['id'].get_string();
-		let datetime = mail['datetime'].get_int32();
+		this.parent(INACTIVE_ITEM);
+		this._extension = extension;
+		this._mailID = null;
+		this._dateLabel = null;
+		this._iconBin = null;
+		this._closeButton = null;
+		
+		let [sender, size]		= mail['sender_name'].get_string();
+		let [senderAddr, size]	= mail['sender_addr'].get_string();
+		let [subject, size]		= mail['subject'].get_string();
+		let [mailID, size]		= mail['id'].get_string();
+		let datetime			= mail['datetime'].get_int32();
+		
+		this._mailID = mailID;
 		
 		if (sender.length == 0) sender = senderAddr;
 		
@@ -50,13 +58,9 @@ const IndicatorMailMenuItem = new Lang.Class({
 									  reactive: true, can_focus: true, track_hover: true,
 									  style_class: 'menu-item-box'});
 		
-		hbox.connect('button-release-event', Lang.bind(this, this._onButtonReleaseEvent));
-		hbox.connect('touch-event', Lang.bind(this, this._onTouchEvent));
-		hbox.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
-			
 		let vbox = new St.BoxLayout({ vertical: true, x_expand: true });
-		let senderLabel = new St.Label({ text: sender, style_class: 'sender-label' });
-		let subjectLabel = new St.Label({ text: subject, style_class: 'subject-label' });
+		let senderLabel = new St.Label({ text: sender, x_expand: true, style_class: 'sender-label' });
+		let subjectLabel = new St.Label({ text: subject, x_expand: true, style_class: 'subject-label' });
 		
 		/* TODO : somehow these linewrap settings are ignored... */
 		senderLabel.clutter_text.line_wrap = false;
@@ -64,47 +68,51 @@ const IndicatorMailMenuItem = new Lang.Class({
 		subjectLabel.clutter_text.line_wrap = false;
 		subjectLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
 		
+		let hbox2 = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'generic-box' });
+		
+		hbox2.add(senderLabel);
+		
 		if (showDates) {
-			let hbox2 = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'sender-date-box' });
-			let dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'date-label' });
-
-			hbox2.add(senderLabel);
-			hbox2.add(dateLabel, { expand: true, x_fill: false, x_align: St.Align.END });
-			
-			vbox.add(hbox2);
-		} else {
-			vbox.add(senderLabel);
+			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'date-label' });
+			hbox2.add(this._dateLabel, { expand: true, x_fill: false, x_align: St.Align.END });
 		}
 		
+		this._closeButton = new St.Button({ reactive: true, can_focus: true, visible: false, track_hover: true });
+		
+		this._closeButton.connect('clicked', function() {
+			extension.markMailAsRead(mailID);
+		});
+		
+		this._closeButton.child = new St.Icon({ icon_name: 'window-close-symbolic', 
+								style_class: 'popup-menu-icon' });
+		
+		hbox2.add(this._closeButton);
+		
+		vbox.add(hbox2);
 		vbox.add(subjectLabel);
 		
 		hbox.add(vbox);
 		
 		let avatarFile = avatars[senderAddr.toString().toLowerCase()];
 		if (avatarFile != undefined) {
-			let iconBin = new St.Bin({ style_class: 'avatar',
-									   style: 'background-image: url("%s")'.format(avatarFile),
-									   width: avatarSize, height: avatarSize,
-									   x_fill: true,
-									   y_fill: true });
-			hbox.add(iconBin);
+			this._iconBin = new St.Bin({ style_class: 'avatar',
+								   style: 'background-image: url("%s")'.format(avatarFile),
+								   width: avatarSize, height: avatarSize,
+								   x_fill: true,
+								   y_fill: true });
+			hbox.add(this._iconBin);
 		} else {
 			/*hbox.add(new St.Icon({ icon_name: 'avatar-default', 
 											  icon_size: avatarSize }));*/
 		}
-		
-		let closeButton = new St.Button({ reactive: true, can_focus: true, 
-										  track_hover: true, style_class: 'mark-as-read-button' });
-		
-		closeButton.connect('clicked', function() {
-			extension.markMailAsRead(mail_id);
-		});
-		
-		closeButton.child = new St.Icon({ icon_name: 'window-close-symbolic',
-								style_class: 'popup-menu-icon' });
-		
-		hbox.add(closeButton);
 
+		hbox.connect('button-release-event', Lang.bind(this, this._onButtonReleaseEvent));
+		hbox.connect('touch-event', Lang.bind(this, this._onTouchEvent));
+		hbox.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
+		hbox.connect('notify::hover', Lang.bind(this, this._onHover));
+		
+		hbox.isMailnagMailItem = true;
+		
 		this.actor.add_child(hbox);
 	},
 	
@@ -130,8 +138,21 @@ const IndicatorMailMenuItem = new Lang.Class({
 			Utils.openDefaultMailReader();
 			this.activate(event);
 			return Clutter.EVENT_STOP;
+		} else if (symbol == Clutter.KEY_Delete) {
+			this._extension.markMailAsRead(this._mailID);
+			return Clutter.EVENT_STOP;
 		}
 		return Clutter.EVENT_PROPAGATE;
+	},
+	
+	_onHover: function(actor) {
+		if (this._dateLabel != null)
+			this._dateLabel.visible = !actor.hover;
+		
+		if (this._iconBin != null)
+			this._iconBin.visible = !actor.hover;
+		
+		this._closeButton.visible = actor.hover;
 	}
 });
 
@@ -221,9 +242,8 @@ const MailnagIndicator = new Lang.Class({
 				
 				if (mails.length > this._maxVisisbleMails) {
 					let str = _("(and {0} more)").replace("{0}", (mails.length - this._maxVisisbleMails));
-					item = new PopupMenu.PopupBaseMenuItem();
-					item.actor.style_class = 'menu-item-more-box';
-					item.actor.add_child(new St.Label({ text: str }));
+					item = new PopupMenu.PopupBaseMenuItem(INACTIVE_ITEM);
+					item.actor.add_child(new St.Label({ text: str, style_class: 'more-label' }));
 
 					this.menu.addMenuItem(item);
 				}
@@ -245,6 +265,18 @@ const MailnagIndicator = new Lang.Class({
 		this.menu.addMenuItem(item);
 
 		this._addSettingsSubmenu(this.menu);
+		
+		// Fix hover effect of the focused mail menu-item after menu rebuild
+		let [x, y] = global.get_pointer();
+		let actor = global.stage.get_actor_at_pos(Clutter.PickMode.REACTIVE, x, y);
+		if ((actor != null) && (actor.isMailnagMailItem)) {
+			actor.hover = true;
+		}
+		
+		// If the menu is open, set the key-focus on the panel icon
+		// so the focus won't get lost if a mail was removed via the delete key.
+		if (this.menu.isOpen)
+			this.actor.grab_key_focus();
 	},
 	
 	_addMailItems: function(menu, mails, maxMails) {
@@ -303,11 +335,26 @@ const MailnagIndicator = new Lang.Class({
 		let keys = [...groupsTrimmed.keys()].sort();
 
 		for (let k of keys) {
+			let item = new PopupMenu.PopupBaseMenuItem(INACTIVE_ITEM);
+			let label = new St.Label({ text: k, style_class: 'account-group-label' });
 			let mails = groupsTrimmed.get(k);
 			let remainingMails = groups.get(k);
-			let header = remainingMails.length == 0 ? k : "%s (%d/%d)".format(k, mails.length, mails.length + remainingMails.length);
-			let item = new PopupMenu.PopupMenuItem(header, { style_class: 'account-group-header', reactive: false, can_focus: false });
 			
+			label.clutter_text.line_wrap = false;
+			label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+		
+			if (remainingMails.length > 0) {
+				let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'generic-box' });
+				let str = "%d/%d".format(mails.length, mails.length + remainingMails.length);
+				let bin = new St.Bin({ style_class: 'overflow-badge', child: new St.Label( { text: str } ) });
+				
+				hbox.add(label);
+				hbox.add(bin, { expand: true, x_fill: false, x_align: St.Align.END });
+				item.actor.add_child(hbox);
+			} else {
+				item.actor.add_child(label);
+			}
+		
 			menu.addMenuItem(item);
 			this._addMailItems(menu, mails, mails.length);
 		}
