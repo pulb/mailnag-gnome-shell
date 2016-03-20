@@ -25,6 +25,7 @@ const Pango = imports.gi.Pango;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
@@ -253,7 +254,15 @@ const MailnagIndicator = new Lang.Class({
 			
 			item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
 			item.connect('activate', Lang.bind(this, function() {
-				this._extension.markAllMailsAsRead();
+				// We call markAllMailsAsRead() on the mainloop (deferred) 
+				// because it will cause the menu to be rebuilt
+				// (the 'activate' event is closing the menu and 
+				// rebuilding it while it is being closed, somehow 
+				// reopens the menu).
+				Mainloop.idle_add(Lang.bind(this, function() {
+					this._extension.markAllMailsAsRead();
+					return false;
+				}));
 			}));
 			this.menu.addMenuItem(item);
 		}
