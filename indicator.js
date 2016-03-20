@@ -170,13 +170,11 @@ const MailnagIndicator = new Lang.Class({
 		this._avatarSize = avatarSize;
 		this._extension = extension;
 		
-		let icon = new St.Icon({
+		this._icon = new St.Icon({
 			icon_name: INDICATOR_ICON,
 			style_class: 'system-status-icon'});
 
-		this._iconBin = new St.Bin({ child: icon,
-									 x_fill: false,
-									 y_fill: false });
+		this._iconBin = new St.Bin({ child: this._icon, x_fill: false, y_fill: false });
 		
 		this._counterLabel = new St.Label({ text: "0",
 											x_align: Clutter.ActorAlign.CENTER,
@@ -392,7 +390,15 @@ const MailnagIndicator = new Lang.Class({
 	setMails: function(mails) {
 		let label = mails.length <= 99 ? mails.length.toString() : "...";
 		this._counterLabel.set_text(label);
-		this._counterBin.visible = (mails.length > 0);
+
+		if (mails.length > 0) {
+			this._counterBin.visible = true;
+			this._icon.opacity = 255;
+		} else {
+			this._counterBin.visible = false;
+			this._icon.opacity = 130;
+		}
+		
 		this._updateMenu(mails);
 	}
 });
