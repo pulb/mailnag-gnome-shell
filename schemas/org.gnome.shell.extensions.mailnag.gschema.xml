@@ -27,7 +27,7 @@
       <description>Show a button to open a settings submenu</description>
     </key>
     <key type="b" name="remove-indicator">
-      <default>true</default>
+      <default>false</default>
       <summary>Remove indicator icon</summary>
       <description>Removes the indicator icon if the maillist is empty</description>
     </key>
