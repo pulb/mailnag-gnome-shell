@@ -82,6 +82,10 @@ const MailnagSettingsWidget = new GObject.Class({
 		let checkbtn_settings = new Gtk.CheckButton( { label: _('Show Settings button') } );
 		settings.bind('show-settings-button', checkbtn_settings, 'active', Gio.SettingsBindFlags.DEFAULT);
 		this.add(checkbtn_settings);
+		
+		let checkbtn_quit = new Gtk.CheckButton( { label: _('Show Quit button') } );
+		settings.bind('show-quit-button', checkbtn_quit, 'active', Gio.SettingsBindFlags.DEFAULT);
+		this.add(checkbtn_quit);
 	}
 });
 

@@ -25,7 +25,8 @@ const ACTION_FLAGS = {
 	MARK_ALL_AS_READ	: 1,
 	CHECK_FOR_MAIL		: 2,
 	SETTINGS			: 4,
-	ALL					: 7
+	QUIT				: 8,
+	ALL					: 15
 };
 
 const Options = new Lang.Class({

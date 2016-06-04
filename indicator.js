@@ -275,6 +275,15 @@ const MailnagIndicator = new Lang.Class({
 		
 		if (this._opts.menuActions & Opts.ACTION_FLAGS.SETTINGS)
 			this._addSettingsSubmenu(this.menu);
+			
+		if (this._opts.menuActions & Opts.ACTION_FLAGS.QUIT) {
+			item = new PopupMenu.PopupMenuItem(_("Quit"));
+			item.connect('activate', Lang.bind(this, function() {
+				item.actor.reactive = false;
+				this._extension.shutdown();
+			}));
+			this.menu.addMenuItem(item);
+		}
 		
 		if (this.menu.isOpen) {
 			if (mails.length == 0) {

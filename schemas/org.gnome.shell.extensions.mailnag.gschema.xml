@@ -26,6 +26,11 @@
       <summary>Show Settings button</summary>
       <description>Show a button to open a settings submenu</description>
     </key>
+    <key type="b" name="show-quit-button">
+      <default>false</default>
+      <summary>Show Quit button</summary>
+      <description>Show a button to quit Mailnag</description>
+    </key>
     <key type="b" name="remove-indicator">
       <default>false</default>
       <summary>Remove indicator icon</summary>

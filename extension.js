@@ -36,13 +36,15 @@ const SHOW_DATES_KEY					= 'show-dates';
 const SHOW_MARK_ALL_AS_READ_BUTTON_KEY	= 'show-mark-all-as-read-button';
 const SHOW_CHECK_FOR_MAIL_BUTTON_KEY	= 'show-check-for-mail-button';
 const SHOW_SETTINGS_BUTTON_KEY			= 'show-settings-button';
+const SHOW_QUIT_BUTTON_KEY				= 'show-quit-button';
 const GROUP_BY_ACCOUNT_KEY				= 'group-by-account';
 const REMOVE_INDICATOR_KEY				= 'remove-indicator';
 
 const KeyActionMap = new Map([
 	[ SHOW_MARK_ALL_AS_READ_BUTTON_KEY,	Opts.ACTION_FLAGS.MARK_ALL_AS_READ ],
 	[ SHOW_CHECK_FOR_MAIL_BUTTON_KEY,	Opts.ACTION_FLAGS.CHECK_FOR_MAIL ],
-	[ SHOW_SETTINGS_BUTTON_KEY,			Opts.ACTION_FLAGS.SETTINGS ]
+	[ SHOW_SETTINGS_BUTTON_KEY,			Opts.ACTION_FLAGS.SETTINGS ],
+	[ SHOW_QUIT_BUTTON_KEY,				Opts.ACTION_FLAGS.QUIT ]
 ]);
 
 const MailnagIface =
@@ -208,6 +210,14 @@ const MailnagExtension = new Lang.Class({
 		this._proxy.CheckForMailsRemote(function(result, error) {
 			if (error) {
 				log("Error: checkForMailsRemote() failed.");
+			}
+		});
+	},
+	
+	shutdown: function() {
+		this._proxy.ShutdownRemote(function(result, error) {
+			if (error) {
+				log("Error: shutdownRemote() failed.");
 			}
 		});
 	},
