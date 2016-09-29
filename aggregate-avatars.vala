@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013, 2016 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -38,24 +38,23 @@ void main()
 		if (!aggregator.is_quiescent)
 			return true;
 		
-		var cache = AvatarCache.dup();
 		var sb = new StringBuilder();
 		
 		foreach (var e in aggregator.individuals.entries)
 		{
-			foreach (var p in e.value.personas)
+			Individual individual = e.value;
+			FileIcon file_icon = individual.avatar as FileIcon;
+			
+			if (file_icon != null)
 			{
-				string avatar_uri = cache.build_uri_for_avatar(p.uid);
-				File file = File.new_for_uri(avatar_uri);
+				File file = file_icon.get_file();
 				
 				if (file.query_exists())
 				{	
 					foreach (var email in e.value.email_addresses)
 						sb.append_printf("%s;%s;", email.value.strip(), file.get_path());
-					
-					break; /* exit personas loop */
 				}
-			}
+			}	
 		}
 		
 		stdout.printf(sb.truncate(sb.len - 1).str);
