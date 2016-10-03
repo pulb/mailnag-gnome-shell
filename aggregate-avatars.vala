@@ -51,7 +51,7 @@ void main()
 				
 				if (file.query_exists())
 				{	
-					foreach (var email in e.value.email_addresses)
+					foreach (var email in individual.email_addresses)
 						sb.append_printf("%s;%s;", email.value.strip(), file.get_path());
 				}
 			}	
