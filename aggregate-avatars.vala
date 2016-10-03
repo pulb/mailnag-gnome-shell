@@ -57,8 +57,12 @@ void main()
 			}	
 		}
 		
-		stdout.printf(sb.truncate(sb.len - 1).str);
-		stdout.flush();
+		if (sb.len > 0)
+		{
+			stdout.printf(sb.truncate(sb.len - 1).str);
+			stdout.flush();
+		}
+		
 		mainloop.quit();
 		
 		return false;
