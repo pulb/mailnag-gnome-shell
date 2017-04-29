@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2017 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -46,11 +46,11 @@ const IndicatorMailMenuItem = new Lang.Class({
 		this._iconBin = null;
 		this._closeButton = null;
 		
-		let [sender, size]		= mail['sender_name'].get_string();
-		let [senderAddr, size]	= mail['sender_addr'].get_string();
-		let [subject, size]		= mail['subject'].get_string();
-		let [mailID, size]		= mail['id'].get_string();
-		let datetime			= mail['datetime'].get_int32();
+		let [sender, ]		= mail['sender_name'].get_string();
+		let [senderAddr, ]	= mail['sender_addr'].get_string();
+		let [subject, ]		= mail['subject'].get_string();
+		let [mailID, ]		= mail['id'].get_string();
+		let datetime		= mail['datetime'].get_int32();
 		
 		this._mailID = mailID;
 		
