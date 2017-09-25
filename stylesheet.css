@@ -28,7 +28,9 @@
 }
 
 .menu-item-box {
-	background-color: #454c4c;
+	background-color: transparent;
+        box-shadow: 0px 1px 3px 1px rgba(0,0,0,0.5);
+        border: 2px solid rgba(90,105,111,0.5);
 	padding:6px;
 	border-radius: 4px;
 	spacing: 12px;
@@ -37,7 +39,8 @@
 
 .menu-item-box:hover,
 .menu-item-box:focus {
-	background-color: #5d6767;
+	background-color: transparent;
+        border: 2px solid #4690D9;
 }
 
 .account-group-label {
