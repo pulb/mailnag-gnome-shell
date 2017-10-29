@@ -28,7 +28,7 @@
 }
 
 .menu-item-box {
-	background-color: #454c4c;
+	background-color: rgba(255, 255, 255, 0.05);
 	padding:6px;
 	border-radius: 4px;
 	spacing: 12px;
@@ -37,7 +37,7 @@
 
 .menu-item-box:hover,
 .menu-item-box:focus {
-	background-color: #5d6767;
+	background-color: rgba(255, 255, 255, 0.12);
 }
 
 .account-group-label {
@@ -71,7 +71,7 @@
 }
 
 .overflow-badge {
-	color:#393f3f;
+	color: #393f3f;
 	background-color: #59594f; /*#8e8e80;*/
 	font-size: small;
 	padding: 0em 0.4em 0em 0.4em;
