@@ -23,8 +23,8 @@ This extension is currently available in Debian unstable.
 Run `sudo apt-get install gnome-shell-mailnag` in a terminal to install it.
 
 ### Arch Linux
-This extension is available in the [AUR](https://aur.archlinux.org/packages/mailnag-gnome-shell/) repository.  
-Please either run `yaourt -S mailnag-gnome-shell` or `packer -S mailnag-gnome-shell` (as root) to install the package.
+This extension is available in the official repos.  
+Please run `pacman -Syu mailnag-gnome-shell` (as root) to install the package.
 
 ### Other GNOME 3 Distros
 This extension is also available for easy 1-click installation at [extensions.gnome.org](https://extensions.gnome.org/extension/886/mailnag/).  
