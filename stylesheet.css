@@ -29,6 +29,7 @@
 
 .menu-item-box {
 	background-color: rgba(255, 255, 255, 0.05);
+        border: 1px transparent;
 	padding:6px;
 	border-radius: 4px;
 	spacing: 12px;
@@ -38,10 +39,11 @@
 .menu-item-box:hover,
 .menu-item-box:focus {
 	background-color: rgba(255, 255, 255, 0.12);
+        border: 1px solid #5294E2;
 }
 
 .account-group-label {
-	color: #8e8e80;
+	color: #5294E2;
 	font-size: medium;
 	font-weight: bold;
 }
@@ -71,8 +73,7 @@
 }
 
 .overflow-badge {
-	color: #393f3f;
-	background-color: #59594f; /*#8e8e80;*/
+        border: 1px #5294E2;
 	font-size: small;
 	padding: 0em 0.4em 0em 0.4em;
 	border-radius: 4px;
