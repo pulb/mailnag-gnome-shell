@@ -75,7 +75,7 @@ const IndicatorMailMenuItem = new Lang.Class({
 		hbox2.add(senderLabel);
 		
 		if (showDates) {
-			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'date-label' });
+			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'mailnag-date-label' });
 			hbox2.add(this._dateLabel, { expand: true, x_fill: false, x_align: St.Align.END });
 		}
 		
