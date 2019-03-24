@@ -18,8 +18,6 @@
 * MA 02110-1301, USA.
 */
 
-const Lang = imports.lang;
-
 const ACTION_FLAGS = {
 	NONE				: 0,
 	MARK_ALL_AS_READ	: 1,
