@@ -76,7 +76,7 @@ var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
 		
 		this._closeButton = new St.Button({ reactive: true, can_focus: true, visible: false, track_hover: true });
 		
-		this._closeButton.connect('clicked', function() {
+		this._closeButton.connect('clicked', () => {
 			extension.markMailAsRead(mailID);
 		});
 		
@@ -384,14 +384,14 @@ class MailnagIndicator extends PanelMenu.Button {
 		let item = null;
 		let subMenu = new PopupMenu.PopupSubMenuMenuItem(_("Settings"), false);
 		item = new PopupMenu.PopupMenuItem(_("Mailnag Settings"));
-		item.connect('activate', function() {
+		item.connect('activate', () => {
 			Utils.launchApp('mailnag-config.desktop');
 		});
 		
 		subMenu.menu.addMenuItem(item);
 		
 		item = new PopupMenu.PopupMenuItem(_("Extension Settings"));
-		item.connect('activate', function() {
+		item.connect('activate', () => {
 			Util.spawn(['gnome-shell-extension-prefs', 'mailnag@pulb.github.com']);
 		});
 						
@@ -411,7 +411,7 @@ class MailnagIndicator extends PanelMenu.Button {
 			this._counterBin.visible = false;
 			this._icon.opacity = 130;
 		}
-		
+
 		this._updateMenu(mails);
 	}
 });

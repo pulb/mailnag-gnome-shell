@@ -161,7 +161,7 @@ var MailnagExtension = class {
 		this._mails.splice(idx, 1);
 		
 		// Notify the Mailnag daemon to mark the mail as read
-		this._proxy.MarkMailAsReadRemote(mail_id, function(result, error) {
+		this._proxy.MarkMailAsReadRemote(mail_id, (result, error) => {
 			if (error) {
 				log("Error: markMailAsReadRemote() failed.");
 			}
@@ -182,7 +182,7 @@ var MailnagExtension = class {
 			[id, size] = this._mails[i]['id'].get_string();
 		
 			// Notify the Mailnag daemon to mark the mail as read
-			this._proxy.MarkMailAsReadRemote(id, function(result, error) {
+			this._proxy.MarkMailAsReadRemote(id, (result, error) => {
 				if (error) {
 					log("Error: markMailAsReadRemote() failed.");
 				}
@@ -200,7 +200,7 @@ var MailnagExtension = class {
 	}
 	
 	checkForMails() {
-		this._proxy.CheckForMailsRemote(function(result, error) {
+		this._proxy.CheckForMailsRemote((result, error) => {
 			if (error) {
 				log("Error: checkForMailsRemote() failed.");
 			}
@@ -208,7 +208,7 @@ var MailnagExtension = class {
 	}
 	
 	shutdown() {
-		this._proxy.ShutdownRemote(function(result, error) {
+		this._proxy.ShutdownRemote((result, error) => {
 			if (error) {
 				log("Error: shutdownRemote() failed.");
 			}
@@ -261,7 +261,7 @@ function aggregateAvatarsAsync(completedCallback) {
 		GLib.close(stderr_fd);
 
 		let childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, 
-			function(pid, status, requestObject) {
+			(pid, status, requestObject) => {
 				let [out, size] = stdout.read_line(null);
 
 				if (size > 0) {
@@ -315,13 +315,13 @@ function enable() {
 	// Register changed handler for gsettings.
 	// (Restarts the extension if settings
 	// have been changed, e.g. via prefs.js)
-	settings.connect('changed', function(settings, key) {
+	settings.connect('changed', (settings, key) => {
 		if ((ext != null) && !reloadInProgress) {
 			ext.dispose();
 
 			if ((cachedAvatars == null) && (key == SHOW_AVATARS_KEY) && settings.get_boolean(key)) {
 				reloadInProgress = true;
-				aggregateAvatarsAsync(function(avatars) {
+				aggregateAvatarsAsync((avatars) => {
 						cachedAvatars = avatars;
 						ext = createExt(settings, avatars);
 						reloadInProgress = false;
@@ -335,9 +335,9 @@ function enable() {
 	// Register dbus watch handlers - create the extension 
 	// if the Mailnag daemon is running / remove it if the daemon is gone.
 	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
-		function (owner) {
+		(owner) => {
 			if (settings.get_boolean(SHOW_AVATARS_KEY)) {
-				aggregateAvatarsAsync(function(avatars) {
+				aggregateAvatarsAsync((avatars) => {
 						cachedAvatars = avatars;
 						ext = createExt(settings, avatars);
 					});
@@ -345,7 +345,7 @@ function enable() {
 				ext = createExt(settings, {});
 			}
 		},
-		function (owner) {
+		(owner) => {
 			if (ext != null) {
 				ext.dispose();
 				ext = null;
