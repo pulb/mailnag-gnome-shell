@@ -146,7 +146,7 @@ var MailnagExtension = class {
 		// Find the mail object with the specified mail_id
 		let idx = -1;
 		for (let i = 0; i < this._mails.length; i++) {
-			[id, size] = this._mails[i]['id'].get_string();
+			let [id, size] = this._mails[i]['id'].get_string();
 			if (id == mail_id) {
 				idx = i;
 				break;
@@ -179,7 +179,7 @@ var MailnagExtension = class {
 	markAllMailsAsRead() {
 		// TODO: add a markAllMailsAsRead() method to the DBus interface
 		for (let i = 0; i < this._mails.length; i++) {
-			[id, size] = this._mails[i]['id'].get_string();
+			let [id, size] = this._mails[i]['id'].get_string();
 		
 			// Notify the Mailnag daemon to mark the mail as read
 			this._proxy.MarkMailAsReadRemote(id, (result, error) => {
