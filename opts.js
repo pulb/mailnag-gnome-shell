@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2016 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2016, 2019 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
 * MA 02110-1301, USA.
 */
 
-const Lang = imports.lang;
-
 const ACTION_FLAGS = {
 	NONE				: 0,
 	MARK_ALL_AS_READ	: 1,
@@ -29,14 +27,14 @@ const ACTION_FLAGS = {
 	ALL					: 15
 };
 
-const Options = new Lang.Class({
-	Name: 'Options',
-	
-	maxVisibleMails 	: 10,
-	showDates			: true,
-	groupMailsByAccount	: false,
-	removeIndicator		: true,
-	avatars				: {},
-	avatarSize			: 38,
-	menuActions			: ACTION_FLAGS.ALL
-});
+var Options = class {
+	constructor() {	
+		this.maxVisibleMails 		= 10;
+		this.showDates				= true;
+		this.groupMailsByAccount	= false;
+		this.removeIndicator		= true;
+		this.avatars				= {};
+		this.avatarSize				= 38;
+		this.menuActions			= ACTION_FLAGS.ALL;
+	}
+};

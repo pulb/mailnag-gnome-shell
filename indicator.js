@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2017 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2019 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,10 @@
 * MA 02110-1301, USA.
 */
 
-const St = imports.gi.St;
-const Clutter = imports.gi.Clutter;
+const { Clutter, St, Pango, GObject } = imports.gi;
 const Util = imports.misc.util;
-const Pango = imports.gi.Pango;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
-const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -34,12 +31,10 @@ const Opts = Me.imports.opts;
 const INDICATOR_ICON	= 'mail-unread-symbolic'
 const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
  
-const IndicatorMailMenuItem = new Lang.Class({
-	Name: 'IndicatorMailMenuItem',
-	Extends: PopupMenu.PopupBaseMenuItem,
-
-	_init: function(mail, avatars, avatarSize, showDates, extension) {
-		this.parent(INACTIVE_ITEM);
+var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
+	constructor(mail, avatars, avatarSize, showDates, extension) {
+		super(INACTIVE_ITEM);
+		
 		this._extension = extension;
 		this._mailID = null;
 		this._dateLabel = null;
@@ -81,7 +76,7 @@ const IndicatorMailMenuItem = new Lang.Class({
 		
 		this._closeButton = new St.Button({ reactive: true, can_focus: true, visible: false, track_hover: true });
 		
-		this._closeButton.connect('clicked', function() {
+		this._closeButton.connect('clicked', () => {
 			extension.markMailAsRead(mailID);
 		});
 		
@@ -108,32 +103,32 @@ const IndicatorMailMenuItem = new Lang.Class({
 											  icon_size: avatarSize }));*/
 		}
 
-		hbox.connect('button-release-event', Lang.bind(this, this._onButtonReleaseEvent));
-		hbox.connect('touch-event', Lang.bind(this, this._onTouchEvent));
-		hbox.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
-		hbox.connect('notify::hover', Lang.bind(this, this._onHover));
+		hbox.connect('button-release-event', this._onButtonReleaseEvent.bind(this));
+		hbox.connect('touch-event', this._onTouchEvent.bind(this));
+		hbox.connect('key-press-event', this._onKeyPressEvent.bind(this));
+		hbox.connect('notify::hover', this._onHover.bind(this));
 		
 		hbox.isMailnagMailItem = true;
 		
 		this.actor.add_child(hbox);
-	},
+	}
 	
-	_onButtonReleaseEvent: function (actor, event) {
+	_onButtonReleaseEvent(actor, event) {
 		Utils.openDefaultMailReader();
 		this.activate(event);
 		return Clutter.EVENT_STOP;
-	},
+	}
 
-	_onTouchEvent: function (actor, event) {
+	_onTouchEvent(actor, event) {
 		if (event.type() == Clutter.EventType.TOUCH_END) {
 			Utils.openDefaultMailReader();
 			this.activate(event);
 			return Clutter.EVENT_STOP;
 		}
 		return Clutter.EVENT_PROPAGATE;
-	},
+	}
 
-	_onKeyPressEvent: function (actor, event) {
+	_onKeyPressEvent(actor, event) {
 		let symbol = event.get_key_symbol();
 
 		if (symbol == Clutter.KEY_space || symbol == Clutter.KEY_Return) {
@@ -145,9 +140,9 @@ const IndicatorMailMenuItem = new Lang.Class({
 			return Clutter.EVENT_STOP;
 		}
 		return Clutter.EVENT_PROPAGATE;
-	},
+	}
 	
-	_onHover: function(actor) {
+	_onHover(actor) {
 		if (this._dateLabel != null)
 			this._dateLabel.visible = !actor.hover;
 		
@@ -156,14 +151,13 @@ const IndicatorMailMenuItem = new Lang.Class({
 		
 		this._closeButton.visible = actor.hover;
 	}
-});
+};
 
-const MailnagIndicator = new Lang.Class({
-	Name: 'MailnagIndicator',
-	Extends: PanelMenu.Button,
-	
-	_init: function(options, extension) {
-		this.parent(0.0, this.Name);
+var MailnagIndicator = GObject.registerClass(
+class MailnagIndicator extends PanelMenu.Button {
+	_init(options, extension) {
+		super._init(0.0, null, false);
+		
 		this._opts = options;
 		this._extension = extension;
 		
@@ -183,19 +177,21 @@ const MailnagIndicator = new Lang.Class({
 										child: this._counterLabel,
 										layout_manager: new Clutter.BinLayout() });
 
-		this._counterBin.connect('style-changed', Lang.bind(this, function() {
+		this._counterBin.connect('style-changed', () => {
 			let themeNode = this._counterBin.get_theme_node();
 			this._counterBin.translation_x = themeNode.get_length('-mailnag-counter-overlap-x');
 			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
-		}));
+		});
 		
 		this.actor.add_actor(this._iconBin);
 		this.actor.add_actor(this._counterBin);
 		
 		this.setMails([]);
-	},
+	}
 	
-	_allocate: function(actor, box, flags) {
+	vfunc_allocate(box, flags) {
+		super.vfunc_allocate(box, flags);
+		
 		// the iconBin should fill our entire box
 		this._iconBin.allocate(box, flags);
 
@@ -221,9 +217,9 @@ const MailnagIndicator = new Lang.Class({
 		childBox.y2 = childBox.y1 + naturalHeight;
 
 		this._counterBin.allocate(childBox, flags);
-    },
+    }
     
-	_updateMenu: function(mails) {
+	_updateMenu(mails) {
 		let item = null;
 		this.menu.removeAll();
 		
@@ -250,26 +246,26 @@ const MailnagIndicator = new Lang.Class({
 			
 			if (this._opts.menuActions & Opts.ACTION_FLAGS.MARK_ALL_AS_READ) {
 				item = new PopupMenu.PopupMenuItem(_("Mark All As Read"));
-				item.connect('activate', Lang.bind(this, function() {
+				item.connect('activate', () => {
 					// We call markAllMailsAsRead() on the mainloop (deferred) 
 					// because it will cause the menu to be rebuilt
 					// (the 'activate' event is closing the menu and 
 					// rebuilding it while it is being closed, somehow 
 					// reopens the menu).
-					Mainloop.idle_add(Lang.bind(this, function() {
+					Mainloop.idle_add(() => {
 						this._extension.markAllMailsAsRead();
 						return false;
-					}));
-				}));
+					});
+				});
 				this.menu.addMenuItem(item);
 			}
 		}
 		
 		if (this._opts.menuActions & Opts.ACTION_FLAGS.CHECK_FOR_MAIL) {
 			item = new PopupMenu.PopupMenuItem(_("Check For Mail"));
-			item.connect('activate', Lang.bind(this, function() {
+			item.connect('activate', () => {
 				this._extension.checkForMails();
-			}));
+			});
 			this.menu.addMenuItem(item);
 		}
 		
@@ -278,10 +274,10 @@ const MailnagIndicator = new Lang.Class({
 			
 		if (this._opts.menuActions & Opts.ACTION_FLAGS.QUIT) {
 			item = new PopupMenu.PopupMenuItem(_("Quit"));
-			item.connect('activate', Lang.bind(this, function() {
+			item.connect('activate', () => {
 				item.actor.reactive = false;
 				this._extension.shutdown();
-			}));
+			});
 			this.menu.addMenuItem(item);
 		}
 		
@@ -303,18 +299,18 @@ const MailnagIndicator = new Lang.Class({
 				this.actor.grab_key_focus();
 			}
 		}
-	},
+	}
 	
-	_addMailItems: function(menu, mails, maxMails) {
+	_addMailItems(menu, mails, maxMails) {
 		for (let i = 0; i < maxMails; i++) {
 			let item = new IndicatorMailMenuItem(mails[i], this._opts.avatars, 
 				this._opts.avatarSize, this._opts.showDates, this._extension);
 
 			menu.addMenuItem(item);
 		}
-	},
+	}
 	
-	_addGroupedMailItems: function(menu, mails, maxMails) {
+	_addGroupedMailItems(menu, mails, maxMails) {
 		//
 		// Group mails by account
 		//
@@ -384,29 +380,29 @@ const MailnagIndicator = new Lang.Class({
 			menu.addMenuItem(item);
 			this._addMailItems(menu, mails, mails.length);
 		}
-	},
+	}
 	
-	_addSettingsSubmenu: function(menu) {
+	_addSettingsSubmenu(menu) {
 		let item = null;
 		let subMenu = new PopupMenu.PopupSubMenuMenuItem(_("Settings"), false);
 		item = new PopupMenu.PopupMenuItem(_("Mailnag Settings"));
-		item.connect('activate', function() {
+		item.connect('activate', () => {
 			Utils.launchApp('mailnag-config.desktop');
 		});
 		
 		subMenu.menu.addMenuItem(item);
 		
 		item = new PopupMenu.PopupMenuItem(_("Extension Settings"));
-		item.connect('activate', function() {
+		item.connect('activate', () => {
 			Util.spawn(['gnome-shell-extension-prefs', 'mailnag@pulb.github.com']);
 		});
 						
 		subMenu.menu.addMenuItem(item);
 		
 		menu.addMenuItem(subMenu);
-	},
+	}
 	
-	setMails: function(mails) {
+	setMails(mails) {
 		let label = mails.length <= 99 ? mails.length.toString() : "...";
 		this._counterLabel.set_text(label);
 
@@ -417,7 +413,7 @@ const MailnagIndicator = new Lang.Class({
 			this._counterBin.visible = false;
 			this._icon.opacity = 130;
 		}
-		
+
 		this._updateMenu(mails);
 	}
 });
