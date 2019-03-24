@@ -281,7 +281,6 @@ function aggregateAvatarsAsync(completedCallback) {
 }
 
 function createExt(s, avatars) {
-	
 	let opts = new Opts.Options();
 	
 	opts.maxVisibleMails 		= s.get_int(MAX_VISIBLE_MAILS_KEY);

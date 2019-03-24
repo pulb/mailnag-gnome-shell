@@ -189,7 +189,9 @@ class MailnagIndicator extends PanelMenu.Button {
 		this.setMails([]);
 	}
 	
-	_allocate(actor, box, flags) {
+	vfunc_allocate(box, flags) {
+		super.vfunc_allocate(box, flags);
+		
 		// the iconBin should fill our entire box
 		this._iconBin.allocate(box, flags);
 
