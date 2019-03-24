@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2019 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 const Main = imports.ui.main;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Lang = imports.lang;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
@@ -73,10 +72,8 @@ const MailnagIface =
 
 const MailnagDbus = Gio.DBusProxy.makeProxyWrapper(MailnagIface);
 
-const MailnagExtension = new Lang.Class({
-	Name: 'MailnagExtension',
-	
-	_init: function(options) {
+var MailnagExtension = class {
+	constructor(options) {
 		
 		this._mails = [];
 		this._opts = options;
@@ -85,11 +82,8 @@ const MailnagExtension = new Lang.Class({
 		this._proxy = new MailnagDbus(Gio.DBus.session,
 			'mailnag.MailnagService', '/mailnag/MailnagService');
 			
-		this._onMailsAddedId = this._proxy.connectSignal('MailsAdded',
-			Lang.bind(this, this._onMailsAdded));
-		
-		this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved',
-			Lang.bind(this, this._onMailsRemoved));
+		this._onMailsAddedId = this._proxy.connectSignal('MailsAdded', this._onMailsAdded.bind(this));
+		this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved', this._onMailsRemoved.bind(this));
 		
 		// TODO : what if Mailnag sends a MailsAdded signal here or after GetMailsRemote()
 		// (should happen *extremely* rarely)?
@@ -97,21 +91,20 @@ const MailnagExtension = new Lang.Class({
 		
 		// Mailnag possibly fired a 'MailsAdded' signal before this extension was started,
 		// so check if Mailnag fetched mails already and pull them manually.
-		this._proxy.GetMailsRemote(Lang.bind(this,
-			function([mails], error) {
+		this._proxy.GetMailsRemote(([mails], error) => {
 				if (!error) {
 					if ((mails.length > 0) || !this._opts.removeIndicator) {
 						this._handle_new_mails(mails, mails);
 					}
 				}
-			}));
-	},
+			});
+	}
 	
-	_onMailsAdded: function(proxy, sender, [new_mails, all_mails]) {
+	_onMailsAdded(proxy, sender, [new_mails, all_mails]) {
 		this._handle_new_mails(new_mails, all_mails);
-	},
+	}
 	
-	_onMailsRemoved: function(proxy, sender, [remaining_mails]) {
+	_onMailsRemoved(proxy, sender, [remaining_mails]) {
 		// TODO : not only support removal of *all* mails
 		if (remaining_mails.length == 0) {
 			this._mails = [];
@@ -124,9 +117,9 @@ const MailnagExtension = new Lang.Class({
 				}
 			}
 		}
-	},
+	}
 	
-	_handle_new_mails: function(new_mails, all_mails) {
+	_handle_new_mails(new_mails, all_mails) {
 		this._mails = all_mails;
 		
 		if (this._indicator == null) {
@@ -134,22 +127,22 @@ const MailnagExtension = new Lang.Class({
 		} else {
 			this._indicator.setMails(all_mails);
 		}
-	},
+	}
 	
-	_createIndicator: function() {
+	_createIndicator() {
 		this._indicator = new Indicator.MailnagIndicator(this._opts, this);
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
-	},
+	}
 	
-	_destroyIndicator: function() {
+	_destroyIndicator() {
 		if (this._indicator != null) {
 			this._indicator.destroy();
 			this._indicator = null;
 		}
-	},
+	}
 	
-	markMailAsRead: function(mail_id) {
+	markMailAsRead(mail_id) {
 		// Find the mail object with the specified mail_id
 		let idx = -1;
 		for (let i = 0; i < this._mails.length; i++) {
@@ -181,9 +174,9 @@ const MailnagExtension = new Lang.Class({
 			if (this._indicator != null)
 				this._indicator.setMails(this._mails);
 		}
-	},
+	}
 	
-	markAllMailsAsRead: function() {
+	markAllMailsAsRead() {
 		// TODO: add a markAllMailsAsRead() method to the DBus interface
 		for (let i = 0; i < this._mails.length; i++) {
 			[id, size] = this._mails[i]['id'].get_string();
@@ -204,25 +197,25 @@ const MailnagExtension = new Lang.Class({
 			if (this._indicator != null)
 				this._indicator.setMails(this._mails);
 		}
-	},
+	}
 	
-	checkForMails: function() {
+	checkForMails() {
 		this._proxy.CheckForMailsRemote(function(result, error) {
 			if (error) {
 				log("Error: checkForMailsRemote() failed.");
 			}
 		});
-	},
+	}
 	
-	shutdown: function() {
+	shutdown() {
 		this._proxy.ShutdownRemote(function(result, error) {
 			if (error) {
 				log("Error: shutdownRemote() failed.");
 			}
 		});
-	},
+	}
 	
-	dispose: function() {
+	dispose() {
 		if (this._onMailsAddedId > -1) {
 			this._proxy.disconnectSignal(this._onMailsAddedId);
 			this._onMailsAddedId = -1;
@@ -235,7 +228,7 @@ const MailnagExtension = new Lang.Class({
 		
 		this._destroyIndicator();
 	}
-});
+};
 
 function aggregateAvatarsAsync(completedCallback) {
 	let aggregator = "aggregate-avatars";
