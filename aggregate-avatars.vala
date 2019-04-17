@@ -25,7 +25,7 @@
  
 using Folks;
 
-static int main(string args[])
+static int main(string[] args)
 {
 	MainLoop mainloop = new MainLoop();
 	var aggregator = IndividualAggregator.dup();
