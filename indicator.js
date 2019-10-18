@@ -31,9 +31,10 @@ const Opts = Me.imports.opts;
 const INDICATOR_ICON	= 'mail-unread-symbolic'
 const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
  
-var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
-	constructor(mail, avatars, avatarSize, showDates, extension) {
-		super(INACTIVE_ITEM);
+var IndicatorMailMenuItem = GObject.registerClass(
+class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
+	_init(mail, avatars, avatarSize, showDates, extension) {
+		super._init(INACTIVE_ITEM);
 		
 		this._extension = extension;
 		this._mailID = null;
@@ -151,7 +152,7 @@ var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
 		
 		this._closeButton.visible = actor.hover;
 	}
-};
+});
 
 var MailnagIndicator = GObject.registerClass(
 class MailnagIndicator extends PanelMenu.Button {
