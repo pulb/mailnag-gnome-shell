@@ -337,7 +337,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		counter = Math.max(counter, groups.size);
 		
 		while (counter > 0) {
-			for ([k, v] of groups) {
+			for (let [k, v] of groups) {
 				if (v.length > 0) {
 					if (!groupsTrimmed.has(k))
 						groupsTrimmed.set(k, [])
