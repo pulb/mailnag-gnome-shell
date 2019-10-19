@@ -111,7 +111,7 @@ class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
 		
 		hbox.isMailnagMailItem = true;
 		
-		this.actor.add_child(hbox);
+		this.add_child(hbox);
 	}
 	
 	_onButtonReleaseEvent(actor, event) {
@@ -184,8 +184,8 @@ class MailnagIndicator extends PanelMenu.Button {
 			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
 		});
 		
-		this.actor.add_actor(this._iconBin);
-		this.actor.add_actor(this._counterBin);
+		this.add_actor(this._iconBin);
+		this.add_actor(this._counterBin);
 		
 		this.setMails([]);
 	}
@@ -202,7 +202,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		let childBox = new Clutter.ActorBox();
 
 		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
-		let direction = this.actor.get_text_direction();
+		let direction = this.get_text_direction();
 
 		if (direction == Clutter.TextDirection.LTR) {
 			// allocate on the right in LTR
@@ -297,7 +297,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		
 				// If the menu is open, set the key-focus on the panel icon
 				// so the focus won't get lost if a mail was removed via the delete key.
-				this.actor.grab_key_focus();
+				this.grab_key_focus();
 			}
 		}
 	}
