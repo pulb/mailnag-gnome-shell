@@ -291,7 +291,7 @@ function createExt(s, avatars) {
 	opts.avatarSize				= AVATAR_ICON_SIZE;
 	opts.menuActions			= Opts.ACTION_FLAGS.NONE;
 	
-	for ([k, v] of KeyActionMap) {
+	for (let [k, v] of KeyActionMap) {
 		if (s.get_boolean(k))
 			opts.menuActions |= v;
 	}
