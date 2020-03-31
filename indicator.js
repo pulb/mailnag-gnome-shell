@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2019 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2020 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -177,13 +177,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		this._counterBin = new St.Bin({ style_class: 'mailnag-counter',
 										child: this._counterLabel,
 										layout_manager: new Clutter.BinLayout() });
-
-		this._counterBin.connect('style-changed', () => {
-			let themeNode = this._counterBin.get_theme_node();
-			this._counterBin.translation_x = themeNode.get_length('-mailnag-counter-overlap-x');
-			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
-		});
-		
+	
 		this.add_actor(this._iconBin);
 		this.add_actor(this._counterBin);
 		
@@ -197,7 +191,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		this._iconBin.allocate(box, flags);
 
 		// get the allocation box of the indicator icon
-		let iconBox = this._iconBin.child.get_allocation_box();
+		let iconBox = this._iconBin.child.first_child.get_allocation_box();
 		// create a temporary box for calculating the counter allocation
 		let childBox = new Clutter.ActorBox();
 
@@ -214,7 +208,7 @@ class MailnagIndicator extends PanelMenu.Button {
 			childBox.x2 = childBox.x1 + naturalWidth;
 		}
 
-		childBox.y1 = iconBox.y2 - (naturalHeight / 2);
+		childBox.y1 = iconBox.y2 - (naturalHeight / 2) - 1;
 		childBox.y2 = childBox.y1 + naturalHeight;
 
 		this._counterBin.allocate(childBox, flags);
