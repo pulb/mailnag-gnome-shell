@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2016 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2019 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -31,17 +31,12 @@ const _ = Gettext.gettext;
 const MAX_VISIBLE_MAILS_LIMIT	= 20;
 
 
-const MailnagSettingsWidget = new GObject.Class({
-	Name: 'Mailnag.Prefs.MailnagSettingsWidget',
-	GTypeName: 'MailnagSettingsWidget',
-	Extends: Gtk.Box,
+var MailnagSettingsWidget = GObject.registerClass(
+class MailnagSettingsWidget extends Gtk.Box {
 
-
-	_init : function(params) {
-		this.parent(params);
-		this.orientation = Gtk.Orientation.VERTICAL;
+	_init() {
+		super._init( { orientation: Gtk.Orientation.VERTICAL, spacing: 6 } );
 		this.margin = 12;
-		this.spacing = 6;
 		
 		let settings = Convenience.getSettings();
 		

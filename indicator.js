@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2019 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2020 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,10 @@ const Opts = Me.imports.opts;
 const INDICATOR_ICON	= 'mail-unread-symbolic'
 const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
  
-var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
-	constructor(mail, avatars, avatarSize, showDates, extension) {
-		super(INACTIVE_ITEM);
+var IndicatorMailMenuItem = GObject.registerClass(
+class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
+	_init(mail, avatars, avatarSize, showDates, extension) {
+		super._init(INACTIVE_ITEM);
 		
 		this._extension = extension;
 		this._mailID = null;
@@ -110,7 +111,7 @@ var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
 		
 		hbox.isMailnagMailItem = true;
 		
-		this.actor.add_child(hbox);
+		this.add_child(hbox);
 	}
 	
 	_onButtonReleaseEvent(actor, event) {
@@ -151,7 +152,7 @@ var IndicatorMailMenuItem = class extends PopupMenu.PopupBaseMenuItem {
 		
 		this._closeButton.visible = actor.hover;
 	}
-};
+});
 
 var MailnagIndicator = GObject.registerClass(
 class MailnagIndicator extends PanelMenu.Button {
@@ -176,15 +177,9 @@ class MailnagIndicator extends PanelMenu.Button {
 		this._counterBin = new St.Bin({ style_class: 'mailnag-counter',
 										child: this._counterLabel,
 										layout_manager: new Clutter.BinLayout() });
-
-		this._counterBin.connect('style-changed', () => {
-			let themeNode = this._counterBin.get_theme_node();
-			this._counterBin.translation_x = themeNode.get_length('-mailnag-counter-overlap-x');
-			this._counterBin.translation_y = themeNode.get_length('-mailnag-counter-overlap-y');
-		});
-		
-		this.actor.add_actor(this._iconBin);
-		this.actor.add_actor(this._counterBin);
+	
+		this.add_actor(this._iconBin);
+		this.add_actor(this._counterBin);
 		
 		this.setMails([]);
 	}
@@ -196,12 +191,12 @@ class MailnagIndicator extends PanelMenu.Button {
 		this._iconBin.allocate(box, flags);
 
 		// get the allocation box of the indicator icon
-		let iconBox = this._iconBin.child.get_allocation_box();
+		let iconBox = this._iconBin.child.first_child.get_allocation_box();
 		// create a temporary box for calculating the counter allocation
 		let childBox = new Clutter.ActorBox();
 
 		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
-		let direction = this.actor.get_text_direction();
+		let direction = this.get_text_direction();
 
 		if (direction == Clutter.TextDirection.LTR) {
 			// allocate on the right in LTR
@@ -213,7 +208,7 @@ class MailnagIndicator extends PanelMenu.Button {
 			childBox.x2 = childBox.x1 + naturalWidth;
 		}
 
-		childBox.y1 = iconBox.y2 - (naturalHeight / 2);
+		childBox.y1 = iconBox.y2 - (naturalHeight / 2) - 1;
 		childBox.y2 = childBox.y1 + naturalHeight;
 
 		this._counterBin.allocate(childBox, flags);
@@ -296,7 +291,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		
 				// If the menu is open, set the key-focus on the panel icon
 				// so the focus won't get lost if a mail was removed via the delete key.
-				this.actor.grab_key_focus();
+				this.grab_key_focus();
 			}
 		}
 	}
@@ -336,7 +331,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		counter = Math.max(counter, groups.size);
 		
 		while (counter > 0) {
-			for ([k, v] of groups) {
+			for (let [k, v] of groups) {
 				if (v.length > 0) {
 					if (!groupsTrimmed.has(k))
 						groupsTrimmed.set(k, [])
