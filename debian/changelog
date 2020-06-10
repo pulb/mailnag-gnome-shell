@@ -1,3 +1,81 @@
+gnome-shell-mailnag (3.36.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Wed, 10 Jun 2020 17:18:01 +0200
+ 
+gnome-shell-mailnag (3.32.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Sun, 28 Apr 2019 15:30:34 +0200
+
+gnome-shell-mailnag (3.32.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Sun, 24 Mar 2019 17:20:41 +0100
+
+gnome-shell-mailnag (3.30.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Fri, 01 Feb 2019 17:31:36 +0100
+ 
+gnome-shell-mailnag (3.28.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Sat, 02 Jun 2018 12:31:35 +0200
+ 
+gnome-shell-mailnag (3.26.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Sun, 29 Oct 2017 12:07:01 +0100
+ 
+gnome-shell-mailnag (3.20.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Tue, 12 Apr 2016 18:59:36 +0200
+ 
+gnome-shell-mailnag (3.18.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Thu, 24 Mar 2016 14:19:46 +0100
+ 
+gnome-shell-mailnag (3.16.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Sat, 14 Nov 2015 14:24:57 +0100
+ 
+gnome-shell-mailnag (3.14.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Thu, 05 Feb 2015 19:30:44 +0100
+
+gnome-shell-mailnag (3.14.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Sun, 19 Oct 2014 15:03:36 +0200
+
+gnome-shell-mailnag (3.12.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Fri, 19 Sep 2014 15:22:59 +0200
+
+gnome-shell-mailnag (3.12.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Ulbrich <zulu99@gmx.net>  Mon, 14 Jul 2014 20:31:59 +0200
+
 gnome-shell-mailnag (3.12.0-1) unstable; urgency=low
 
   * Initial release.
