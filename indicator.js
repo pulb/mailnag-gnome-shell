@@ -71,8 +71,9 @@ class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
 		hbox2.add(senderLabel);
 		
 		if (showDates) {
-			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'mailnag-date-label' });
-			hbox2.add(this._dateLabel, { y_expand: true, x_expand: false, x_align: St.Align.END });
+			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'mailnag-date-label', 
+											 y_expand: true, x_expand: false, x_align: Clutter.ActorAlign.END });
+			hbox2.add(this._dateLabel);
 		}
 		
 		this._closeButton = new St.Button({ reactive: true, can_focus: true, visible: false, track_hover: true });
@@ -184,11 +185,11 @@ class MailnagIndicator extends PanelMenu.Button {
 		this.setMails([]);
 	}
 	
-	vfunc_allocate(box, flags) {
-		super.vfunc_allocate(box, flags);
+	vfunc_allocate(box) {
+		super.vfunc_allocate(box);
 		
 		// the iconBin should fill our entire box
-		this._iconBin.allocate(box, flags);
+		this._iconBin.allocate(box);
 
 		// get the allocation box of the indicator icon
 		let iconBox = this._iconBin.child.first_child.get_allocation_box();
@@ -211,7 +212,7 @@ class MailnagIndicator extends PanelMenu.Button {
 		childBox.y1 = iconBox.y2 - (naturalHeight / 2) - 1;
 		childBox.y2 = childBox.y1 + naturalHeight;
 
-		this._counterBin.allocate(childBox, flags);
+		this._counterBin.allocate(childBox);
     }
     
 	_updateMenu(mails) {
@@ -363,10 +364,11 @@ class MailnagIndicator extends PanelMenu.Button {
 			if (remainingMails.length > 0) {
 				let hbox = new St.BoxLayout({ vertical: false, x_expand: true, style_class: 'generic-box' });
 				let str = "%d/%d".format(mails.length, mails.length + remainingMails.length);
-				let bin = new St.Bin({ style_class: 'overflow-badge', child: new St.Label( { text: str } ) });
+				let bin = new St.Bin({ style_class: 'overflow-badge', child: new St.Label( { text: str } ), 
+									   y_expand: true, x_expand: false, x_align: Clutter.ActorAlign.END });
 				
 				hbox.add(label);
-				hbox.add(bin, { y_expand: true, x_expand: false, x_align: St.Align.END });
+				hbox.add(bin);
 				item.actor.add_child(hbox);
 			} else {
 				item.actor.add_child(label);
