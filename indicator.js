@@ -72,7 +72,7 @@ class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
 		
 		if (showDates) {
 			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'mailnag-date-label' });
-			hbox2.add(this._dateLabel, { expand: true, x_fill: false, x_align: St.Align.END });
+			hbox2.add(this._dateLabel, { y_expand: true, x_expand: false, x_align: St.Align.END });
 		}
 		
 		this._closeButton = new St.Button({ reactive: true, can_focus: true, visible: false, track_hover: true });
@@ -96,8 +96,8 @@ class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
 			this._iconBin = new St.Bin({ style_class: 'avatar',
 								   style: 'background-image: url("%s")'.format(avatarFile),
 								   width: avatarSize, height: avatarSize,
-								   x_fill: true,
-								   y_fill: true });
+								   x_expand: true,
+								   y_expand: true });
 			hbox.add(this._iconBin);
 		} else {
 			/*hbox.add(new St.Icon({ icon_name: 'avatar-default', 
@@ -166,7 +166,7 @@ class MailnagIndicator extends PanelMenu.Button {
 			icon_name: INDICATOR_ICON,
 			style_class: 'system-status-icon'});
 
-		this._iconBin = new St.Bin({ child: this._icon, x_fill: false, y_fill: false });
+		this._iconBin = new St.Bin({ child: this._icon, x_expand: false, y_expand: false });
 		
 		this._counterLabel = new St.Label({ text: "0",
 											x_align: Clutter.ActorAlign.CENTER,
@@ -366,7 +366,7 @@ class MailnagIndicator extends PanelMenu.Button {
 				let bin = new St.Bin({ style_class: 'overflow-badge', child: new St.Label( { text: str } ) });
 				
 				hbox.add(label);
-				hbox.add(bin, { expand: true, x_fill: false, x_align: St.Align.END });
+				hbox.add(bin, { y_expand: true, x_expand: false, x_align: St.Align.END });
 				item.actor.add_child(hbox);
 			} else {
 				item.actor.add_child(label);

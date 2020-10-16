@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2016, 2019 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2016, 2019, 2020 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 * MA 02110-1301, USA.
 */
 
-const ACTION_FLAGS = {
+var ACTION_FLAGS = {
 	NONE				: 0,
 	MARK_ALL_AS_READ	: 1,
 	CHECK_FOR_MAIL		: 2,
