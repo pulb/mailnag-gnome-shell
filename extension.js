@@ -1,6 +1,6 @@
 /* Mailnag - GNOME-Shell extension frontend
 *
-* Copyright 2013 - 2019 Patrick Ulbrich <zulu99@gmx.net>
+* Copyright 2013 - 2021 Patrick Ulbrich <zulu99@gmx.net>
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -79,25 +79,27 @@ var MailnagExtension = class {
 		this._opts = options;
 		this._indicator = null;
 		
-		this._proxy = new MailnagDbus(Gio.DBus.session,
-			'mailnag.MailnagService', '/mailnag/MailnagService');
+		var proxy_ready_cb = function() {
+			this._onMailsAddedId = this._proxy.connectSignal('MailsAdded', this._onMailsAdded.bind(this));
+			this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved', this._onMailsRemoved.bind(this));
 			
-		this._onMailsAddedId = this._proxy.connectSignal('MailsAdded', this._onMailsAdded.bind(this));
-		this._onMailsRemovedId = this._proxy.connectSignal('MailsRemoved', this._onMailsRemoved.bind(this));
-		
-		// TODO : what if Mailnag sends a MailsAdded signal here or after GetMailsRemote()
-		// (should happen *extremely* rarely)?
-		// Is it possible to prevent the extension from notifying twice?
-		
-		// Mailnag possibly fired a 'MailsAdded' signal before this extension was started,
-		// so check if Mailnag fetched mails already and pull them manually.
-		this._proxy.GetMailsRemote(([mails], error) => {
-				if (!error) {
-					if ((mails.length > 0) || !this._opts.removeIndicator) {
-						this._handle_new_mails(mails, mails);
+			// TODO : what if Mailnag sends a MailsAdded signal here or after GetMailsRemote()
+			// (should happen *extremely* rarely)?
+			// Is it possible to prevent the extension from notifying twice?
+			
+			// Mailnag possibly fired a 'MailsAdded' signal before this extension was started,
+			// so check if Mailnag fetched mails already and pull them manually.
+			this._proxy.GetMailsRemote(([mails], error) => {
+					if (!error) {
+						if ((mails.length > 0) || !this._opts.removeIndicator) {
+							this._handle_new_mails(mails, mails);
+						}
 					}
-				}
-			});
+				});
+		};
+		
+		this._proxy = new MailnagDbus(Gio.DBus.session,
+			'mailnag.MailnagService', '/mailnag/MailnagService', proxy_ready_cb.bind(this));
 	}
 	
 	_onMailsAdded(proxy, sender, [new_mails, all_mails]) {
