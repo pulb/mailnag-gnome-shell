@@ -35,8 +35,9 @@ var MailnagSettingsWidget = GObject.registerClass(
 class MailnagSettingsWidget extends Gtk.Box {
 
 	_init() {
-		super._init( { orientation: Gtk.Orientation.VERTICAL, spacing: 6 } );
-		this.margin = 12;
+		super._init( {	orientation: Gtk.Orientation.VERTICAL, 
+						spacing: 6, 
+						margin_start: 12, margin_end: 12, margin_top: 12, margin_bottom: 12 } );
 		
 		let settings = Convenience.getSettings();
 		

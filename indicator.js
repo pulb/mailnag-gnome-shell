@@ -199,13 +199,17 @@ class MailnagIndicator extends PanelMenu.Button {
 		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
 		let direction = this.get_text_direction();
 
+		// WORKAROUND: somehow the horizontal allocation 
+		// of the counter bin is 4px off in GNOME 40.
+		const OFFSET = 4;
+		
 		if (direction == Clutter.TextDirection.LTR) {
 			// allocate on the right in LTR
-			childBox.x1 = iconBox.x2 - (naturalWidth / 2);
+			childBox.x1 = iconBox.x2 - (naturalWidth / 2) + OFFSET;
 			childBox.x2 = childBox.x1 + naturalWidth;
 		} else {
 			// allocate on the left in RTL
-			childBox.x1 = iconBox.x1 - (naturalWidth / 2);
+			childBox.x1 = iconBox.x1 - (naturalWidth / 2) + OFFSET;
 			childBox.x2 = childBox.x1 + naturalWidth;
 		}
 
