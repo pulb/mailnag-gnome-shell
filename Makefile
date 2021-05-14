@@ -1,4 +1,4 @@
-CC = valac
+CC = valac $(foreach w,$(CFLAGS) $(LDFLAGS),-X $(w))
 LIBS = folks
 UUID = mailnag@pulb.github.com
 FILES = aggregate-avatars.vala
