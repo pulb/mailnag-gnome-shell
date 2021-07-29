@@ -1,2 +1,4 @@
 aggregate-avatars*
 schemas/*.compiled
+/locale/
+*.mo

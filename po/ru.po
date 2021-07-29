@@ -1,0 +1,85 @@
+# Russian translation for mailnag-gnome-shell.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the mailnag-gnome-shell package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# vantu5z <vantu5z@mail.ru>, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: mailnag-gnome-shell\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-07-29 10:35+0300\n"
+"PO-Revision-Date: 2021-07-28 16:57+0300\n"
+"Last-Translator: vantu5z <vantu5z@mail.ru>\n"
+"Language-Team: Russian <>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"X-Generator: Gtranslator 40.0\n"
+
+#: prefs.js:45
+msgid "Maximum number of visible mails:"
+msgstr "Максимальное количество отображаемых писем:"
+
+#: prefs.js:54
+msgid "Remove indicator icon if maillist is empty"
+msgstr "Скрыть индикатор, если нет входящих писем"
+
+#: prefs.js:58
+msgid "Group mails by account"
+msgstr "Группировать письма по аккаунтам"
+
+#: prefs.js:62
+msgid "Show avatars"
+msgstr "Аватары"
+
+#: prefs.js:66
+msgid "Show dates"
+msgstr "Даты"
+
+#: prefs.js:70
+msgid "Show Mark-All-As-Read button"
+msgstr "Кнопка \"Отметить все как прочитанные\""
+
+#: prefs.js:74
+msgid "Show Check-For-Mail button"
+msgstr "Кнопка \"Проверить почту\""
+
+#: prefs.js:78
+msgid "Show Settings button"
+msgstr "Кнопка \"Параметры\""
+
+#: prefs.js:82
+msgid "Show Quit button"
+msgstr "Кнопка \"Выход\""
+
+#: indicator.js:239
+msgid "(and {0} more)"
+msgstr "(и ещё {0})"
+
+#: indicator.js:251
+msgid "Mark All As Read"
+msgstr "Отметить все как прочитанные"
+
+#: indicator.js:268
+msgid "Check For Mail"
+msgstr "Проверить почту"
+
+#: indicator.js:279
+msgid "Quit"
+msgstr "Выйти"
+
+#: indicator.js:391
+msgid "Settings"
+msgstr "Параметры"
+
+#: indicator.js:392
+msgid "Mailnag Settings"
+msgstr "Настройки Mailnag"
+
+#: indicator.js:399
+msgid "Extension Settings"
+msgstr "Настройки расширения"

@@ -25,7 +25,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 
-const Gettext = imports.gettext.domain('mailnag-gnome-shell');
+const Gettext = imports.gettext.domain(Me.metadata['gettext-domain']);
 const _ = Gettext.gettext;
 
 const MAX_VISIBLE_MAILS_LIMIT = 20;
