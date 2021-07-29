@@ -28,6 +28,9 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const Opts = Me.imports.opts;
 
+const Gettext = imports.gettext.domain(Me.metadata['gettext-domain']);
+const _ = Gettext.gettext;
+
 const INDICATOR_ICON	= 'mail-unread-symbolic'
 const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
  

@@ -308,6 +308,7 @@ let cachedAvatars = null;
 let reloadInProgress = false;
 
 function init() {
+	Convenience.initTranslations(ExtensionUtils.TRANSLATION_DOMAIN);
 }
 
 function enable() {	

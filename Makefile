@@ -10,9 +10,36 @@ PROGRAMS = aggregate-avatars
 
 prefix = /usr
 
+all: $(PROGRAMS) compile_schemas build_locale
+
 $(PROGRAMS): $(FILES)
 	$(CC) --pkg $(LIBS) $(FILES)
 
+compile_schemas:
+	glib-compile-schemas schemas
+
+# Localization
+# ============
+MSGSRC = $(wildcard po/*.po)
+TOLOCALIZE = prefs.js indicator.js
+
+potfile: $(TOLOCALIZE)
+	mkdir -p po
+	xgettext -k_ -kN_ -o po/mailnag-gnome-shell.pot --package-name "mailnag-gnome-shell" $(TOLOCALIZE)
+
+mergepo: potfile
+	for l in $(MSGSRC); do \
+		msgmerge -U $$l ./po/mailnag-gnome-shell.pot; \
+	done;
+
+build_locale:
+	for l in $(MSGSRC) ; do \
+		lf=locale/`basename $$l .po`/LC_MESSAGES; \
+		mkdir -p $$lf; \
+		msgfmt -c $$l -o $$lf/mailnag-gnome-shell.mo; \
+	done;
+
+# ============ End localization
 
 .PHONY: install
 install: $(PROGRAMS) $(DATA) $(SCHEMAS)
@@ -43,15 +70,16 @@ install-local: $(PROGRAMS) $(DATA) $(SCHEMAS)
 		install -m 0644 $$d ~/.local/$(DATADIR); \
 	done
 	
-	test -d $(prefix)/$(DATADIR)/schemas || mkdir --parents ~/.local/$(DATADIR)/schemas
+	test -d ~/.local/$(DATADIR)/schemas || mkdir --parents ~/.local/$(DATADIR)/schemas
 	for d in $(SCHEMAS); do \
 		install -m 0644 $$d ~/.local/$(DATADIR)/schemas; \
 	done
 	
-	glib-compile-schemas ~/.local/$(DATADIR)/schemas
-
+	cp -r locale ~/.local/$(DATADIR)
 
 .PHONY: clean
 clean:
 	rm -f $(PROGRAMS)
+	rm -f schemas/gschemas.compiled
+	rm -rf locale
 
