@@ -17,18 +17,17 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 * MA 02110-1301, USA.
 */
+import Gio from 'gi://Gio';
+import Shell from 'gi://Shell';
 
-const Gio = imports.gi.Gio;
-const Shell = imports.gi.Shell;
-
-function launchApp(desktop_file) {
+export function launchApp(desktop_file) {
 	let app = Shell.AppSystem.get_default()
 		.lookup_app(desktop_file);
 	if (app != null)
 		app.activate();
 }
 
-function openDefaultMailReader() {
+export function openDefaultMailReader() {
 	// Get default application for emails.
 	let appInfo = Gio.AppInfo
 		.get_default_for_type("x-scheme-handler/mailto", false);

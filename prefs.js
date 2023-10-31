@@ -18,80 +18,142 @@
 * MA 02110-1301, USA.
 */
 
-const Gio = imports.gi.Gio;
-const Gtk = imports.gi.Gtk;
-const GObject = imports.gi.GObject;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
+import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk';
+import GObject from 'gi://GObject';
+import Adw from 'gi://Adw';
 
-const Gettext = imports.gettext.domain('mailnag-gnome-shell');
-const _ = Gettext.gettext;
+import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+
 
 const MAX_VISIBLE_MAILS_LIMIT = 20;
 
 
 var MailnagSettingsWidget = GObject.registerClass(
-class MailnagSettingsWidget extends Gtk.Box {
+	class MailnagSettingsWidget extends Adw.PreferencesPage {
 
-	_init() {
-		super._init( {	orientation: Gtk.Orientation.VERTICAL, 
-						spacing: 6, 
-						margin_start: 12, margin_end: 12, margin_top: 12, margin_bottom: 12 } );
-		
-		let settings = Convenience.getSettings();
-		
-		let box = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
-		box.append(new Gtk.Label( { label: _('Maximum number of visible mails:') } ));
-		
-		let spinbtn = Gtk.SpinButton.new_with_range(1, MAX_VISIBLE_MAILS_LIMIT, 1);
-		spinbtn.set_value(settings.get_int('max-visible-mails'));
-		settings.bind('max-visible-mails', spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
-		
-		box.append(spinbtn);
-		this.append(box);
-		
-		let checkbtn_remove = new Gtk.CheckButton( { label: _('Remove indicator icon if maillist is empty') } );
-		settings.bind('remove-indicator', checkbtn_remove, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_remove);
-		
-		let checkbtn_group = new Gtk.CheckButton( { label: _('Group mails by account') } );
-		settings.bind('group-by-account', checkbtn_group, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_group);
-		
-		let checkbtn_avatars = new Gtk.CheckButton( { label: _('Show avatars') } );
-		settings.bind('show-avatars', checkbtn_avatars, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_avatars);
-		
-		let checkbtn_dates = new Gtk.CheckButton( { label: _('Show dates') } );
-		settings.bind('show-dates', checkbtn_dates, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_dates);
-		
-		let checkbtn_mark = new Gtk.CheckButton( { label: _('Show Mark-All-As-Read button') } );
-		settings.bind('show-mark-all-as-read-button', checkbtn_mark, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_mark);
-		
-		let checkbtn_check = new Gtk.CheckButton( { label: _('Show Check-For-Mail button') } );
-		settings.bind('show-check-for-mail-button', checkbtn_check, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_check);
-		
-		let checkbtn_settings = new Gtk.CheckButton( { label: _('Show Settings button') } );
-		settings.bind('show-settings-button', checkbtn_settings, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_settings);
-		
-		let checkbtn_quit = new Gtk.CheckButton( { label: _('Show Quit button') } );
-		settings.bind('show-quit-button', checkbtn_quit, 'active', Gio.SettingsBindFlags.DEFAULT);
-		this.append(checkbtn_quit);
+		_init(extension) {
+
+			super._init({
+				title: _('Mailnag Extension'),
+				icon_name: 'general-symbolic',
+				name: 'Mailnag'
+			});
+
+			let behaviorGroup = new Adw.PreferencesGroup({
+				title: _('General')
+			});
+
+			let settings = getSettings(extension);
+
+			const settingsList = [
+				{
+				  key: 'max-visible-mails',
+				  label: _('Maximum number of visible mails:'),
+				  type: 'spin',
+				},
+				{
+				  key: 'remove-indicator',
+				  label: _('Remove indicator icon if maillist is empty'),
+				  type: 'check',
+				},
+				{
+				  key: 'group-by-account',
+				  label: _('Group mails by account'),
+				  type: 'check',
+				},
+				{
+				  key: 'show-avatars',
+				  label: _('Show avatars'),
+				  type: 'check',
+				},
+				{
+				  key: 'show-dates',
+				  label: _('Show dates'),
+				  type: 'check',
+				},
+				{
+				  key: 'show-mark-all-as-read-button',
+				  label: _('Show Mark-All-As-Read button'),
+				  type: 'check',
+				},
+				{
+				  key: 'show-check-for-mail-button',
+				  label: _('Show Check-For-Mail button'),
+				  type: 'check',
+				},
+				{
+				  key: 'show-settings-button',
+				  label: _('Show Settings button'),
+				  type: 'check',
+				},
+				{
+				  key: 'show-quit-button',
+				  label: _('Show Quit button'),
+				  type: 'check',
+				},
+			];
+
+			for (const setting of settingsList) {
+				let widget;
+				if (setting.type === 'spin') {
+					widget = new Adw.SpinRow({
+						title: _(setting.label),
+						adjustment: new Gtk.Adjustment({
+							lower: 1,
+							upper: MAX_VISIBLE_MAILS_LIMIT,
+							step_increment: 1
+						})
+					});
+					widget.set_value(settings.get_int(setting.key));
+					settings.bind(setting.key, widget, 'value', Gio.SettingsBindFlags.DEFAULT);
+				} else {
+					widget = new Adw.SwitchRow({
+						title: _(setting.label),
+					});
+					settings.bind(setting.key, widget, 'active', Gio.SettingsBindFlags.DEFAULT);
+
+				}
+
+				behaviorGroup.add(widget);
+			}
+			this.add(behaviorGroup)
+
+		}
+	});
+
+
+export default class MailnagExtensionPreferences extends ExtensionPreferences {
+	fillPreferencesWindow(window) {
+		let widget = new MailnagSettingsWidget(this);
+
+		window.add(widget);
 	}
-});
-
-
-function init() {
-	Convenience.initTranslations();
 }
 
+function getSettings(extension, schema) {
+	schema = schema || extension.metadata['settings-schema'];
+	const GioSSS = Gio.SettingsSchemaSource;
 
-function buildPrefsWidget() {
-	let widget = new MailnagSettingsWidget();
-	return widget;
+	// check if this extension was built with "make zip-file", and thus
+	// has the schema files in a subfolder
+	// otherwise assume that extension has been installed in the
+	// same prefix as gnome-shell (and therefore schemas are available
+	// in the standard folders)
+	let schemaDir = extension.dir.get_child('schemas');
+	let schemaSource;
+	if (schemaDir.query_exists(null))
+		schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
+			GioSSS.get_default(),
+			false);
+	else
+		schemaSource = GioSSS.get_default();
+
+	let schemaObj = schemaSource.lookup(schema, true);
+	if (!schemaObj)
+		throw new Error('Schema ' + schema + ' could not be found for extension '
+			+ extension.metadata.uuid + '. Please check your installation.');
+
+	return new Gio.Settings({ settings_schema: schemaObj });
 }

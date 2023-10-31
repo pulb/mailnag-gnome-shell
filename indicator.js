@@ -18,15 +18,19 @@
 * MA 02110-1301, USA.
 */
 
-const { Clutter, St, Pango, GObject } = imports.gi;
-const Util = imports.misc.util;
-const PopupMenu = imports.ui.popupMenu;
-const PanelMenu = imports.ui.panelMenu;
-const Mainloop = imports.mainloop;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils;
-const Opts = Me.imports.opts;
+import Clutter from 'gi://Clutter';
+import St from 'gi://St';
+import Pango from 'gi://Pango';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+import * as dateUtil from 'resource:///org/gnome/shell/misc/dateUtils.js';
+
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+
+import * as Utils from './utils.js';
+import * as Opts from './opts.js';
 
 const INDICATOR_ICON	= 'mail-unread-symbolic'
 const INACTIVE_ITEM		= { reactive: true, can_focus: false, activate: false, hover: false };
@@ -71,7 +75,7 @@ class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
 		hbox2.add(senderLabel);
 		
 		if (showDates) {
-			this._dateLabel = new St.Label({ text: Util.formatTime(new Date(datetime * 1000)), style_class: 'mailnag-date-label', 
+			this._dateLabel = new St.Label({ text: dateUtil.formatTime(new Date(datetime * 1000)), style_class: 'mailnag-date-label', 
 											 y_expand: true, x_expand: false, x_align: Clutter.ActorAlign.END });
 			hbox2.add(this._dateLabel);
 		}
@@ -155,69 +159,23 @@ class IndicatorMailMenuItem extends PopupMenu.PopupBaseMenuItem {
 	}
 });
 
-var MailnagIndicator = GObject.registerClass(
+export var MailnagIndicator = GObject.registerClass(
 class MailnagIndicator extends PanelMenu.Button {
 	_init(options, extension) {
-		super._init(0.0, null, false);
-		
+		super._init(0.0, "MailnagIndicator");
 		this._opts = options;
 		this._extension = extension;
-		
+		let hbox = new St.BoxLayout({ style_class: 'panel-status-menu-box mailnag-indicator-hbox' });
 		this._icon = new St.Icon({
 			icon_name: INDICATOR_ICON,
-			style_class: 'system-status-icon'});
-
-		this._iconBin = new St.Bin({ child: this._icon, x_expand: false, y_expand: false });
-		
-		this._counterLabel = new St.Label({ text: "0",
-											x_align: Clutter.ActorAlign.CENTER,
-											x_expand: true,
-											y_align: Clutter.ActorAlign.CENTER,
-											y_expand: true });
-		
-		this._counterBin = new St.Bin({ style_class: 'mailnag-counter',
-										child: this._counterLabel,
-										layout_manager: new Clutter.BinLayout() });
+			style_class: 'system-status-icon mailnag-indicator-icon'});
+        hbox.add_child(this._icon);
 	
-		this.add_actor(this._iconBin);
-		this.add_actor(this._counterBin);
-		
+		this.add_child(hbox);
 		this.setMails([]);
 	}
 	
-	vfunc_allocate(box) {
-		super.vfunc_allocate(box);
-		
-		// the iconBin should fill our entire box
-		this._iconBin.allocate(box);
 
-		// get the allocation box of the indicator icon
-		let iconBox = this._iconBin.child.first_child.get_allocation_box();
-		// create a temporary box for calculating the counter allocation
-		let childBox = new Clutter.ActorBox();
-
-		let [minWidth, minHeight, naturalWidth, naturalHeight] = this._counterBin.get_preferred_size();
-		let direction = this.get_text_direction();
-
-		// WORKAROUND: somehow the horizontal allocation 
-		// of the counter bin is 4px off in GNOME 40.
-		const OFFSET = 4;
-		
-		if (direction == Clutter.TextDirection.LTR) {
-			// allocate on the right in LTR
-			childBox.x1 = iconBox.x2 - (naturalWidth / 2) + OFFSET;
-			childBox.x2 = childBox.x1 + naturalWidth;
-		} else {
-			// allocate on the left in RTL
-			childBox.x1 = iconBox.x1 - (naturalWidth / 2) + OFFSET;
-			childBox.x2 = childBox.x1 + naturalWidth;
-		}
-
-		childBox.y1 = iconBox.y2 - (naturalHeight / 2) - 1;
-		childBox.y2 = childBox.y1 + naturalHeight;
-
-		this._counterBin.allocate(childBox);
-    }
     
 	_updateMenu(mails) {
 		let item = null;
@@ -252,7 +210,7 @@ class MailnagIndicator extends PanelMenu.Button {
 					// (the 'activate' event is closing the menu and 
 					// rebuilding it while it is being closed, somehow 
 					// reopens the menu).
-					Mainloop.idle_add(() => {
+					GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
 						this._extension.markAllMailsAsRead();
 						return false;
 					});
@@ -260,7 +218,11 @@ class MailnagIndicator extends PanelMenu.Button {
 				this.menu.addMenuItem(item);
 			}
 		}
-		
+                item = new PopupMenu.PopupMenuItem(_("Open Webmail"));
+			item.connect('activate', () => {
+				this._extension.openWebmail();
+			});
+			this.menu.addMenuItem(item);
 		if (this._opts.menuActions & Opts.ACTION_FLAGS.CHECK_FOR_MAIL) {
 			item = new PopupMenu.PopupMenuItem(_("Check For Mail"));
 			item.connect('activate', () => {
@@ -404,15 +366,12 @@ class MailnagIndicator extends PanelMenu.Button {
 	}
 	
 	setMails(mails) {
-		let label = mails.length <= 99 ? mails.length.toString() : "...";
-		this._counterLabel.set_text(label);
+
 
 		if (mails.length > 0) {
-			this._counterBin.visible = true;
-			this._icon.opacity = 255;
+			this._icon.icon_name = "ayatanawebmail-messages-new"
 		} else {
-			this._counterBin.visible = false;
-			this._icon.opacity = 130;
+			this._icon.icon_name = "ayatanawebmail-messages"
 		}
 
 		this._updateMenu(mails);

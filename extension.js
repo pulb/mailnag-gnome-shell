@@ -18,14 +18,14 @@
 * MA 02110-1301, USA.
 */
 
-const Main = imports.ui.main;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const Indicator = Me.imports.indicator;
-const Opts = Me.imports.opts;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import * as Indicator from './indicator.js'
+import * as Opts from './opts.js'
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+import * as Convenience from './convenience.js'
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 const AVATAR_ICON_SIZE = 38;
 
@@ -131,7 +131,7 @@ var MailnagExtension = class {
 		}
 	}
 	
-	_createIndicator() {
+	_createIndicator() {		
 		this._indicator = new Indicator.MailnagIndicator(this._opts, this);
 		this._indicator.setMails(this._mails);
 		Main.panel.addToStatusArea('mailnag-indicator', this._indicator, 0);
@@ -209,6 +209,10 @@ var MailnagExtension = class {
 		});
 	}
 	
+	openWebmail() {
+		Util.spawn(["xdg-email"])
+	}
+	
 	shutdown() {
 		this._proxy.ShutdownRemote((result, error) => {
 			if (error) {
@@ -232,145 +236,143 @@ var MailnagExtension = class {
 	}
 };
 
-function aggregateAvatarsAsync(completedCallback) {
-	let aggregator = "aggregate-avatars";
-	let result = null;
-	let avatars = {};
 
-	try {
-		result = GLib.spawn_async_with_pipes(
-			null, [aggregator], 
-			null, GLib.SpawnFlags.SEARCH_PATH | 
-					GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
-	} catch (ex) {
-		try {
-			result = GLib.spawn_async_with_pipes(
-				Me.path, [aggregator], 
-				null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
-		} catch (ex) {
-			logError(ex, "Failed to spawn '%s'".format(aggregator));
-		}
-	}
 
-	if (result == null) {
-		completedCallback(avatars);
-	} else {
-		let [res, pid, stdin_fd, stdout_fd, stderr_fd] = result;		
-		let stdout = new Gio.DataInputStream({ 
-				base_stream: new Gio.UnixInputStream({ fd: stdout_fd, close_fd: true })});
-
-		GLib.close(stdin_fd);
-		GLib.close(stderr_fd);
-
-		let childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, 
-			(pid, status, requestObject) => {
-				let [out, size] = stdout.read_line(null);
-
-				if (size > 0) {
-					let lst = out.toString().split(";");
-					for (let i = 0; i < lst.length; i += 2) {
-						let email = lst[i].toLowerCase();
-						let avatarFile = lst[i + 1];
-						avatars[email] = avatarFile;
-					}
+export default class MailnagIndicatorExtension extends Extension{
+    enable() {
+		this.settings = Convenience.getSettings(this);
+		// Register changed handler for gsettings.
+		// (Restarts the extension if settings
+		// have been changed, e.g. via prefs.js)
+		this.settings.connect('changed', (settings, key) => {
+			if ((this.ext != null) && !this.reloadInProgress) {
+				this.ext.dispose();
+	
+				if ((this.cachedAvatars == null) && (key == SHOW_AVATARS_KEY) && settings.get_boolean(key)) {
+					this.reloadInProgress = true;
+					this.aggregateAvatarsAsync((avatars) => {
+							this.cachedAvatars = avatars;
+							this.ext = this.createExt(settings, avatars);
+							this.reloadInProgress = false;
+						});
+				} else {							
+					this.ext = this.createExt(settings, settings.get_boolean(SHOW_AVATARS_KEY) ? this.cachedAvatars : {});
 				}
-
-				stdout.close(null);
-				GLib.source_remove(childWatch);
-				completedCallback(avatars);
-			});
-	}
-}
-
-function createExt(s, avatars) {
-	let opts = new Opts.Options();
-	
-	opts.maxVisibleMails 		= s.get_int(MAX_VISIBLE_MAILS_KEY);
-	opts.showDates				= s.get_boolean(SHOW_DATES_KEY);
-	opts.groupMailsByAccount	= s.get_boolean(GROUP_BY_ACCOUNT_KEY);
-	opts.removeIndicator		= s.get_boolean(REMOVE_INDICATOR_KEY);
-	opts.avatars				= avatars;
-	opts.avatarSize				= AVATAR_ICON_SIZE;
-	opts.menuActions			= Opts.ACTION_FLAGS.NONE;
-	
-	for (let [k, v] of KeyActionMap) {
-		if (s.get_boolean(k))
-			opts.menuActions |= v;
-	}
-	
-	return new MailnagExtension(opts);
-}
-
-let ext = null;
-let watch_id = -1;
-let settings = null;
-let cachedAvatars = null;
-let reloadInProgress = false;
-
-function init() {
-}
-
-function enable() {	
-	settings = Convenience.getSettings();
-	
-	// Register changed handler for gsettings.
-	// (Restarts the extension if settings
-	// have been changed, e.g. via prefs.js)
-	settings.connect('changed', (settings, key) => {
-		if ((ext != null) && !reloadInProgress) {
-			ext.dispose();
-
-			if ((cachedAvatars == null) && (key == SHOW_AVATARS_KEY) && settings.get_boolean(key)) {
-				reloadInProgress = true;
-				aggregateAvatarsAsync((avatars) => {
-						cachedAvatars = avatars;
-						ext = createExt(settings, avatars);
-						reloadInProgress = false;
-					});
-			} else {							
-				ext = createExt(settings, settings.get_boolean(SHOW_AVATARS_KEY) ? cachedAvatars : {});
-			}
-		}
-	});
-
-	// Register dbus watch handlers - create the extension 
-	// if the Mailnag daemon is running / remove it if the daemon is gone.
-	watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
-		(owner) => {
-			if (settings.get_boolean(SHOW_AVATARS_KEY)) {
-				aggregateAvatarsAsync((avatars) => {
-						cachedAvatars = avatars;
-						ext = createExt(settings, avatars);
-					});
-			} else {
-				ext = createExt(settings, {});
-			}
-		},
-		(owner) => {
-			if (ext != null) {
-				ext.dispose();
-				ext = null;
 			}
 		});
+	
+		// Register dbus watch handlers - create the extension 
+		// if the Mailnag daemon is running / remove it if the daemon is gone.
+		this.watch_id = Gio.DBus.session.watch_name('mailnag.MailnagService', Gio.BusNameWatcherFlags.NONE,
+			(owner) => {
+				if (this.settings.get_boolean(SHOW_AVATARS_KEY)) {
+					this.aggregateAvatarsAsync((avatars) => {
+							this.cachedAvatars = avatars;
+							ext = this.createExt(this.settings, avatars);
+						});
+				} else {
+					this.ext = this.createExt(this.settings, {});
+				}
+			},
+			(owner) => {
+				if (this.ext != null) {
+					this.ext.dispose();
+					this.ext = null;
+				}
+			});
+    }
+
+    disable() {
+        if (this.watch_id > -1) {
+			// TODO : test: does this call the function (owner) callback, so ext.dispose() is called twice?
+			Gio.DBus.session.unwatch_name(this.watch_id);
+			this.watch_id = -1;
+		}
+		
+		this.cachedAvatars = null;
+		this.reloadInProgress = false;
+		
+		if (this.settings != null) {
+			this.settings.run_dispose();
+			this.settings = null;
+		}
+		
+		if (this.ext != null) {
+			this.ext.dispose();
+			this.ext = null;
+		}
+    }
+
+	aggregateAvatarsAsync(completedCallback) {
+		let aggregator = "aggregate-avatars";
+		let result = null;
+		let avatars = {};
+	
+		try {
+			result = GLib.spawn_async_with_pipes(
+				null, [aggregator], 
+				null, GLib.SpawnFlags.SEARCH_PATH | 
+						GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+		} catch (ex) {
+			try {
+				let extensionObject = Extension.lookupByUUID('mailnag@pulb.github.com');
+				result = GLib.spawn_async_with_pipes(
+					this.path, [aggregator], 
+					null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+			} catch (ex) {
+				logError(ex, "Failed to spawn '%s'".format(aggregator));
+			}
+		}
+	
+		if (result == null) {
+			completedCallback(avatars);
+		} else {
+			let [res, pid, stdin_fd, stdout_fd, stderr_fd] = result;		
+			let stdout = new Gio.DataInputStream({ 
+					base_stream: new Gio.UnixInputStream({ fd: stdout_fd, close_fd: true })});
+	
+			GLib.close(stdin_fd);
+			GLib.close(stderr_fd);
+	
+			let childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, 
+				(pid, status, requestObject) => {
+					let [out, size] = stdout.read_line(null);
+	
+					if (size > 0) {
+						let lst = out.toString().split(";");
+						for (let i = 0; i < lst.length; i += 2) {
+							let email = lst[i].toLowerCase();
+							let avatarFile = lst[i + 1];
+							avatars[email] = avatarFile;
+						}
+					}
+	
+					stdout.close(null);
+					GLib.source_remove(childWatch);
+					completedCallback(avatars);
+				});
+		}
+	}
+
+	createExt(s, avatars) {
+		let opts = new Opts.Options();
+		
+		opts.maxVisibleMails 		= s.get_int(MAX_VISIBLE_MAILS_KEY);
+		opts.showDates				= s.get_boolean(SHOW_DATES_KEY);
+		opts.groupMailsByAccount	= s.get_boolean(GROUP_BY_ACCOUNT_KEY);
+		opts.removeIndicator		= s.get_boolean(REMOVE_INDICATOR_KEY);
+		opts.avatars				= avatars;
+		opts.avatarSize				= AVATAR_ICON_SIZE;
+		opts.menuActions			= Opts.ACTION_FLAGS.NONE;
+		
+		for (let [k, v] of KeyActionMap) {
+			if (s.get_boolean(k))
+				opts.menuActions |= v;
+		}
+		
+		return new MailnagExtension(opts);
+	}
+
+
 }
 
-function disable() {
-	if (watch_id > -1) {
-		// TODO : test: does this call the function (owner) callback, so ext.dispose() is called twice?
-		Gio.DBus.session.unwatch_name(watch_id);
-		watch_id = -1;
-	}
-	
-	cachedAvatars = null;
-	reloadInProgress = false;
-	
-	if (settings != null) {
-		settings.run_dispose();
-		settings = null;
-	}
-	
-	if (ext != null) {
-		ext.dispose();
-		ext = null;
-	}
-}

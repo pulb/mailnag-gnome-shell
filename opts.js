@@ -18,7 +18,7 @@
 * MA 02110-1301, USA.
 */
 
-var ACTION_FLAGS = {
+export const ACTION_FLAGS = {
 	NONE				: 0,
 	MARK_ALL_AS_READ	: 1,
 	CHECK_FOR_MAIL		: 2,
@@ -27,7 +27,7 @@ var ACTION_FLAGS = {
 	ALL					: 15
 };
 
-var Options = class {
+export var Options = class {
 	constructor() {	
 		this.maxVisibleMails 		= 10;
 		this.showDates				= true;
